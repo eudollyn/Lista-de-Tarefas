@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Minha Lista de Tarefas</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Minha Lista de Tarefas</h1>
+<div id="filtros">
+  <button onclick="filtrarTarefas('Todas')">Todas</button>
+  <button onclick="filtrarTarefas('Pessoal')">Pessoal</button>
+  <button onclick="filtrarTarefas('Trabalho')">Trabalho</button>
+  <button onclick="filtrarTarefas('Estudos')">Estudos</button>
+  <button onclick="filtrarTarefas('Outros')">Outros</button>
+</div>
+    <div class="input-tarefa">
+      <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." />
+      <select id="categoria">
+  <option value="Pessoal">Pessoal</option>
+  <option value="Trabalho">Trabalho</option>
+  <option value="Estudos">Estudos</option>
+  <option value="Outros">Outros</option>
+</select>
+
+<button onclick="adicionarTarefa()">Adicionar</button>
+    </div>
+    <ul id="listaTarefas"></ul>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+<button onclick="alternarTema()">Alternar Tema</button>
+
