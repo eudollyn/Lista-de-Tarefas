@@ -1,210 +1,269 @@
+:root {
+  --bg: #f0f0f0;
+  --text: #111;
+  --primary: #4caf50;
+  --secondary: #e0e0e0;
+  --card: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+body.dark {
+  --bg: #121212;
+  --text: #eee;
+  --primary: #81c784;
+  --secondary: #333;
+  --card: #1e1e1e;
+  --shadow: rgba(255, 255, 255, 0.05);
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2rem;
+  transition: all 0.3s ease;
 }
 
 .container {
-  background-color: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 500px;
+  max-width: 600px;
+  margin: auto;
+  background-color: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px var(--shadow);
+  padding: 2rem;
+  animation: fadeIn 0.5s ease;
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
+  font-size: 2rem;
 }
 
 .input-tarefa {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+input, select, button {
+  padding: 0.6rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
 }
 
 input {
   flex: 1;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
 }
 
 button {
-  padding: 10px 15px;
-  background-color: #4CAF50;
+  background-color: var(--primary);
   color: white;
-  border: none;
-  border-radius: 8px;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 button:hover {
-  background-color: #45a049;
+  opacity: 0.85;
 }
 
-ul {
+ul#listaTarefas {
   list-style: none;
+  margin-top: 1rem;
 }
 
-li {
-  background: #f9f9f9;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 8px;
+ul#listaTarefas li {
+  background: var(--secondary);
+  padding: 0.8rem;
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  animation: slideUp 0.3s ease;
 }
 
-li.concluida {
-  text-decoration: line-through;
-  color: gray;
-}
-body.dark {
-  background: #121212;
-  color: white;
+ul#listaTarefas li button {
+  background-color: crimson;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
 }
 
-body.dark .container {
-  background-color: #1e1e1e;
-}
-
-body.dark input,
-body.dark button,
-body.dark li {
-  background-color: #333;
-  color: white;
-  border: 1px solid #555;
-}
-li {
-  background: #f9f9f9;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 8px;
+.extras {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  animation: fadeIn 0.4s ease-in-out;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 30px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  z-index: 1000;
+}
+
+.toast.show {
+  opacity: 1;
+  pointer-events: all;
 }
 
 @keyframes fadeIn {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-select {
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background-color: white;
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-body.dark select {
-  background-color: #333;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.feito {
+  text-decoration: line-through;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.feito .texto-tarefa {
+  text-decoration: line-through;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.btn-check {
+  background-color: #28a745;
   color: white;
-  border: 1px solid #555;
-}
-
-.categoria-tag {
-  font-size: 0.75rem;
-  background-color: #ddd;
-  padding: 2px 6px;
+  border: none;
   border-radius: 5px;
-  margin-left: 10px;
+  padding: 4px 8px;
+  cursor: pointer;
+  margin-left: 5px;
+  transition: background-color 0.3s;
 }
 
-body.dark .categoria-tag {
-  background-color: #555;
+.btn-check:hover {
+  background-color: #218838;
 }
-#filtros {
-  display: flex;
-  gap: 10px;
+
+.concluida {
+  text-decoration: line-through;
+  color: #999;
+  opacity: 0.8;
+}
+
+.feito .texto-tarefa {
+  text-decoration: line-through;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+li button.check {
+  margin-left: 8px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+li button.check:hover {
+  transform: scale(1.1);
+}
+
+.contador {
+  text-align: center;
   margin-bottom: 15px;
-  flex-wrap: wrap;
-  justify-content: center;
+  font-size: 1rem;
+  color: #fff;
 }
 
-#filtros button {
-  background-color: #e0e0e0;
+.pomodoro {
+  background: #1f1f1f;
+  padding: 20px;
+  margin-top: 30px;
+  border-radius: 10px;
+  text-align: center;
+  color: white;
+}
+
+#tempo {
+  font-size: 2rem;
+  margin: 10px 0;
+}
+
+.pomodoro button {
+  margin: 5px;
+  padding: 8px 15px;
+  background: #4CAF50;
+  color: white;
   border: none;
   border-radius: 8px;
-  padding: 8px 14px;
   cursor: pointer;
-  transition: all 0.3s;
+  font-weight: bold;
+  transition: background 0.3s ease;
 }
 
-#filtros button:hover {
-  background-color: #c0c0c0;
+.pomodoro button:hover {
+  background: #45a049;
 }
 
-body.dark #filtros button {
-  background-color: #444;
+.entrada-tempo {
+  margin-bottom: 10px;
   color: white;
 }
 
-body.dark #filtros button:hover {
-  background-color: #666;
+.entrada-tempo input {
+  width: 60px;
+  padding: 5px;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
 }
-body.dark {
-  background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+
+.contador {
+  margin-top: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+body.dark .contador span {
   color: white;
 }
 
-body.dark .container {
-  background-color: #1e1e1e;
+body:not(.dark) .contador span {
+  color: #333; /* cor escura visível no fundo branco */
 }
 
-body.dark input,
-body.dark select {
-  background-color: #333;
-  color: white;
-  border: 1px solid #555;
+.rodape {
+  margin-top: 40px;
+  text-align: center;
+  padding: 20px;
+  font-size: 0.9rem;
+  color: #333;
+  opacity: 0.7;
 }
 
-body.dark button {
-  background-color: #4caf50;
-  color: white;
-}
-
-body.dark .tarefa {
-  background-color: #2a2a2a;
-}
-@media (max-width: 600px) {
-  .container {
-    width: 90%;
-    padding: 20px;
-  }
-
-  .input-tarefa {
-    flex-direction: column;
-  }
-
-  .input-tarefa input,
-  .input-tarefa select,
-  .input-tarefa button {
-    width: 100%;
-    margin-top: 10px;
-  }
-
-  .categoria-tag {
-    display: block;
-    margin-top: 5px;
-    margin-left: 0;
-  }
+body.dark .rodape {
+  color: #fff;
 }
