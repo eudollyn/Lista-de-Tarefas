@@ -1,0 +1,42 @@
+{
+  "packageId": "app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa",
+  "host": "lista-de-tarefas-git-main-erick-carmos-projects.vercel.app",
+  "name": "Lista de Tarefas Pomodoro",
+  "launcherName": "Tarefas 🍅",
+  "display": "standalone",
+  "themeColor": "#F44336",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": true,
+  "startUrl": "/index.html",
+  "iconUrl": "https://lista-de-tarefas-git-main-erick-carmos-projects.vercel.app/assets/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "C:\\Projetos\\ListadeTarefas\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://lista-de-tarefas-git-main-erick-carmos-projects.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://lista-de-tarefas-git-main-erick-carmos-projects.vercel.app/",
+  "minSdkVersion": 21,
+  "orientation": "any",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "appVersion": "1"
+}

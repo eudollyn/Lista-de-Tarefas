@@ -1,0 +1,10 @@
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-pngs-0 C:\Projetos\ListadeTarefas\app\build\generated\res\pngs\release
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-resValues-1 C:\Projetos\ListadeTarefas\app\build\generated\res\resValues\release
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-packageReleaseResources-2 C:\Projetos\ListadeTarefas\app\build\intermediates\incremental\release\packageReleaseResources\merged.dir
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-packageReleaseResources-3 C:\Projetos\ListadeTarefas\app\build\intermediates\incremental\release\packageReleaseResources\stripped.dir
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-release-4 C:\Projetos\ListadeTarefas\app\build\intermediates\merged_res\release\mergeReleaseResources
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-main-5 C:\Projetos\ListadeTarefas\app\src\main\res
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-release-6 C:\Projetos\ListadeTarefas\app\src\release\res
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-core-1.1.0-7 C:\Users\ehenr\.gradle\caches\8.8\transforms\2144911bb09dce3a07f407e3b390637e\transformed\core-1.1.0\res
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-browser-1.4.0-8 C:\Users\ehenr\.gradle\caches\8.8\transforms\b511174c15fdde7dea3e957094b4390b\transformed\browser-1.4.0\res
+app.vercel.lista_de_tarefas_git_main_erick_carmos_projects.twa.app-androidbrowserhelper-2.5.0-9 C:\Users\ehenr\.gradle\caches\8.8\transforms\d3335fbdff4200978ad121d7b141def7\transformed\androidbrowserhelper-2.5.0\res
