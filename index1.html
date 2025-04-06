@@ -1,64 +1,76 @@
-<!DOCTYPE html>
+-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minha Lista de Tarefas</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
-<footer class="rodape">
-  <p>Criado por <strong>Erick Carmo</strong> 💻</p>
-</footer>
+<link rel="icon" sizes="192x192" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png" sizes="192x192">
+<meta name="theme-color" content="#ff6347">
 <body>
   <div class="container">
-<div class="contador">
-  <span id="total">Total: 0</span> | 
-  <span id="pendentes">Pendentes: 0</span>
-</div>
+    <header>
+      <h1>📝 Minha Lista de Tarefas</h1>
+    </header>
 
-<div class="pomodoro">
-  <h2>🍅 Temporizador Pomodoro</h2>
+    <section class="contador" aria-label="Contador de tarefas">
+      <span id="total">Total: 0</span>
+      <span id="pendentes">Pendentes: 0</span>
+    </section>
 
-  <div class="entrada-tempo">
-    <label for="entradaMinutos">Tempo (min):</label>
-    <input type="number" id="entradaMinutos" min="1" max="90" value="25">
-  </div>
+    <section class="pomodoro" aria-label="Temporizador Pomodoro">
+      <h2>🍅 Temporizador Pomodoro</h2>
 
-  <div id="tempo">25:00</div>
+      <div class="entrada-tempo">
+        <label for="entradaMinutos">Tempo (min):</label>
+        <input type="number" id="entradaMinutos" min="1" max="90" value="25" />
+      </div>
 
-  <button onclick="iniciarPomodoro()">Iniciar</button>
-  <button onclick="pausarPomodoro()">Pausar</button>
-  <button onclick="resetarPomodoro()">Resetar</button>
-</div>
+      <div id="tempo">25:00</div>
 
-    <h1>📝 Minha Lista de Tarefas</h1>
+      <button onclick="iniciarPomodoro()">Iniciar</button>
+      <button onclick="pausarPomodoro()">Pausar</button>
+      <button onclick="resetarPomodoro()">Resetar</button>
+    </section>
 
-    <div class="input-tarefa">
-      <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa...">
-      <select id="categoria">
+    <section class="input-tarefa" aria-label="Adicionar nova tarefa">
+      <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." aria-label="Nova tarefa" />
+      <select id="categoria" aria-label="Categoria da tarefa">
         <option value="Pessoal">Pessoal</option>
         <option value="Trabalho">Trabalho</option>
         <option value="Estudos">Estudos</option>
         <option value="Outros">Outros</option>
       </select>
       <button onclick="adicionarTarefa()">Adicionar</button>
-    </div>
+    </section>
 
-    <div class="extras">
+    <section class="extras" aria-label="Funções extras">
       <button onclick="exportarTXT()">Exportar TXT</button>
       <button onclick="exportarPDF()">Exportar PDF</button>
       <button onclick="limparTudo()">Limpar Tudo</button>
       <button onclick="alternarTema()">Alternar Tema</button>
-    </div>
+    </section>
 
-    <ul id="listaTarefas"></ul>
+    <ul id="listaTarefas" aria-label="Lista de tarefas"></ul>
   </div>
 
   <div class="toast" id="toast">Tarefa adicionada!</div>
 
-  <audio id="somAdicionar" src="assets/add.wav"></audio>
-<audio id="somRemover" src="assets/remove.wav"></audio>
+  <footer class="rodape">
+    <p>Criado por <strong>Erick Carmo</strong> 💻</p>
+  </footer>
 
+  <!-- Áudios -->
+  <audio id="somAdicionar" src="assets/add.wav" preload="auto"></audio>
+  <audio id="somRemover" src="assets/remove.wav" preload="auto"></audio>
+  <audio id="alert" src="assets/alert.wav" preload="auto"></audio>
+
+  <!-- Script -->
   <script src="script.js"></script>
 </body>
 </html>
+

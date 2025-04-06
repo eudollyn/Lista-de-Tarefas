@@ -28,9 +28,10 @@ body {
   color: var(--text);
   min-height: 100vh;
   padding: 2rem;
-  transition: all 0.3s ease;
+  transition: background 0.3s, color 0.3s;
 }
 
+/* Container principal */
 .container {
   max-width: 600px;
   margin: auto;
@@ -47,37 +48,48 @@ h1 {
   font-size: 2rem;
 }
 
+/* Caixa de entrada de tarefas */
 .input-tarefa {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
   margin-bottom: 1.5rem;
 }
 
-input, select, button {
-  padding: 0.6rem;
+.input-tarefa input,
+.input-tarefa select {
+  flex: 1 1 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--secondary);
+  font-size: 1rem;
+  background-color: var(--card);
+  color: var(--text);
+  box-shadow: 0 2px 5px var(--shadow);
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-tarefa button {
+  padding: 10px;
+  background-color: var(--primary);
+  color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
-}
-
-input {
-  flex: 1;
-}
-
-button {
-  background-color: var(--primary);
-  color: white;
   cursor: pointer;
-  transition: 0.2s;
+  transition: background-color 0.3s ease;
 }
 
-button:hover {
+.input-tarefa button:hover {
   opacity: 0.85;
 }
 
+/* Lista de tarefas */
 ul#listaTarefas {
   list-style: none;
   margin-top: 1rem;
+  padding: 0;
 }
 
 ul#listaTarefas li {
@@ -91,93 +103,17 @@ ul#listaTarefas li {
   animation: slideUp 0.3s ease;
 }
 
-ul#listaTarefas li button {
-  background-color: crimson;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.9rem;
-}
-
-.extras {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
-.toast {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--primary);
-  color: white;
-  padding: 1rem 1.5rem;
-  border-radius: 30px;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s ease;
-  font-weight: bold;
-  z-index: 1000;
-}
-
-.toast.show {
-  opacity: 1;
-  pointer-events: all;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.feito {
+ul#listaTarefas li.feito span,
+ul#listaTarefas li.feito .texto-tarefa {
   text-decoration: line-through;
   opacity: 0.6;
   transition: all 0.3s ease;
 }
 
-.feito .texto-tarefa {
-  text-decoration: line-through;
-  opacity: 0.6;
-  transition: all 0.3s ease;
-}
-
-.btn-check {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 4px 8px;
-  cursor: pointer;
-  margin-left: 5px;
-  transition: background-color 0.3s;
-}
-
-.btn-check:hover {
-  background-color: #218838;
-}
-
-.concluida {
-  text-decoration: line-through;
-  color: #999;
-  opacity: 0.8;
-}
-
-.feito .texto-tarefa {
-  text-decoration: line-through;
-  opacity: 0.6;
-  transition: all 0.3s ease;
-}
-
+/* Botões das tarefas */
 li button.check {
   margin-left: 8px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 5px;
@@ -190,13 +126,42 @@ li button.check:hover {
   transform: scale(1.1);
 }
 
-.contador {
-  text-align: center;
-  margin-bottom: 15px;
-  font-size: 1rem;
-  color: #fff;
+ul#listaTarefas li button {
+  background-color: crimson;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
+/* Botões extras */
+.extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.extras button {
+  flex: 1 1 calc(50% - 10px);
+  padding: 10px;
+  font-size: 0.9rem;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.extras button:hover {
+  background-color: #555;
+}
+
+/* Pomodoro */
 .pomodoro {
   background: #1f1f1f;
   padding: 20px;
@@ -214,7 +179,7 @@ li button.check:hover {
 .pomodoro button {
   margin: 5px;
   padding: 8px 15px;
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   border: none;
   border-radius: 8px;
@@ -240,30 +205,81 @@ li button.check:hover {
   font-size: 1rem;
 }
 
+/* Contador */
 .contador {
+  text-align: center;
   margin-top: 20px;
   font-size: 1rem;
   font-weight: bold;
-  text-align: center;
+  color: var(--text);
 }
 
-body.dark .contador span {
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
   color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 30px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  z-index: 1000;
 }
 
-body:not(.dark) .contador span {
-  color: #333; /* cor escura visível no fundo branco */
+.toast.show {
+  opacity: 1;
+  pointer-events: all;
 }
 
-.rodape {
+/* Rodapé */
+.rodape,
+footer {
   margin-top: 40px;
   text-align: center;
   padding: 20px;
   font-size: 0.9rem;
-  color: #333;
   opacity: 0.7;
+  color: var(--text);
 }
 
-body.dark .rodape {
-  color: #fff;
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadein {
+  from { bottom: 10px; opacity: 0; }
+  to { bottom: 30px; opacity: 1; }
+}
+
+@keyframes fadeout {
+  from { bottom: 30px; opacity: 1; }
+  to { bottom: 10px; opacity: 0; }
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .input-tarefa input,
+  .input-tarefa select,
+  .input-tarefa button,
+  .extras button {
+    flex: 1 1 100%;
+  }
+
+  .contador {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
 }

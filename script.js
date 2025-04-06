@@ -1,4 +1,4 @@
-function mostrarPopupBoasVindas(msg) {
+function mostrarPopupBoasVindas() {
   alert("🎉 Bem-vindo à sua lista de tarefas!");
 }
 
@@ -7,34 +7,41 @@ function adicionarTarefa() {
   const categoria = document.getElementById("categoria").value;
   if (!texto) return;
 
-   const li = document.createElement("li");
+  const li = document.createElement("li");
   li.className = "animada";
   li.innerHTML = `
-  <span>${texto} <small>[${categoria}]</small></span>
-  <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
-  <button onclick="removerTarefa(this)">🗑️</button>
-`;
-	
-document.getElementById("listaTarefas").appendChild(li);
+    <span>${texto} <small>[${categoria}]</small></span>
+    <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
+    <button onclick="removerTarefa(this)">🗑️</button>
+  `;
+  document.getElementById("listaTarefas").appendChild(li);
   document.getElementById("novaTarefa").value = "";
   mostrarToast("Tarefa adicionada!");
   document.getElementById("somAdicionar").play();
+  salvarTarefas();
 }
 
 function concluirTarefa(botao) {
   const li = botao.parentElement;
   li.classList.toggle("feito");
+  const tarefa = li.querySelector("span");
+  tarefa.classList.toggle("concluida");
+  mostrarToast("Tarefa marcada como concluída!");
+  salvarTarefas();
 }
 
 function removerTarefa(btn) {
   btn.parentElement.remove();
   mostrarToast("Tarefa removida!");
   document.getElementById("somRemover").play();
+  salvarTarefas();
 }
 
 function limparTudo() {
   document.getElementById("listaTarefas").innerHTML = "";
   mostrarToast("Todas as tarefas foram removidas.");
+  limparLocalStorage();
+  salvarTarefas();
 }
 
 function alternarTema() {
@@ -64,20 +71,11 @@ function mostrarToast(msg) {
   setTimeout(() => toast.className = "toast", 3000);
 }
 
-window.onload = () => {
-  mostrarPopupBoasVindas();
-};
-
-function concluirTarefa(btn) {
-  const tarefa = btn.parentElement.querySelector("span");
-  tarefa.classList.toggle("concluida");
-  mostrarToast("Tarefa marcada como concluída!");
-}
-
 // ====== CONTADOR DE TAREFAS ======
 function atualizarContador() {
   const total = document.querySelectorAll("#listaTarefas li").length;
-  const pendentes = total; // futuramente: pode subtrair os concluídos
+  const concluidas = document.querySelectorAll("#listaTarefas li.feito").length;
+  const pendentes = total - concluidas;
   document.getElementById("total").innerText = `Total: ${total}`;
   document.getElementById("pendentes").innerText = `Pendentes: ${pendentes}`;
 }
@@ -85,7 +83,7 @@ function atualizarContador() {
 // Chamar após adicionar/remover tarefa
 const lista = document.getElementById("listaTarefas");
 const observer = new MutationObserver(atualizarContador);
-observer.observe(lista, { childList: true });
+observer.observe(lista, { childList: true, subtree: true });
 
 // ====== POMODORO ======
 let tempoInicial = 25 * 60;
@@ -117,10 +115,17 @@ function iniciarPomodoro() {
         tempoRestante--;
         atualizarTempo();
       } else {
-        clearInterval(pomodoroInterval);
-        pomodoroInterval = null;
-        alert("✅ Tempo finalizado! Hora da pausa.");
-      }
+clearInterval(pomodoroInterval);
+pomodoroInterval = null;
+
+// Primeiro toca o som
+document.getElementById("alert").play();
+
+// Depois de 0.5s, mostra o alerta (permite o som sair primeiro)
+setTimeout(() => {
+  alert("✅ Tempo finalizado! Hora da pausa.");
+}, 500);
+            }
     }, 1000);
   }
 }
@@ -137,3 +142,55 @@ function resetarPomodoro() {
 }
 
 atualizarTempo(); // Mostrar o tempo inicial
+
+// ====== LOCAL STORAGE ======
+function salvarTarefas() {
+  const tarefas = [...document.querySelectorAll("#listaTarefas li")].map(li => {
+    const texto = li.querySelector("span")?.innerText || "";
+    const feito = li.classList.contains("feito");
+    return { texto, feito };
+  });
+  localStorage.setItem("tarefas", JSON.stringify(tarefas));
+}
+
+function carregarTarefas() {
+  const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
+  tarefas.forEach(({ texto, feito }) => {
+    const [t, categoriaMatch] = texto.split(" [");
+    const categoria = categoriaMatch?.replace("]", "") || "Outros";
+
+    const li = document.createElement("li");
+    li.className = "animada";
+    if (feito) li.classList.add("feito");
+
+    li.innerHTML = `
+      <span class="${feito ? 'concluida' : ''}">${t} <small>[${categoria}]</small></span>
+      <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
+      <button onclick="removerTarefa(this)">🗑️</button>
+    `;
+    document.getElementById("listaTarefas").appendChild(li);
+  });
+  atualizarContador();
+}
+
+function limparLocalStorage() {
+  localStorage.removeItem("tarefas");
+}
+
+// ====== CARREGAMENTO INICIAL ======
+window.onload = () => {
+  carregarTarefas();
+  mostrarPopupBoasVindas();
+};
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("✅ Service Worker registrado com sucesso!"))
+    .catch(err => console.error("Erro ao registrar Service Worker:", err));
+}
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js")
+    .then(() => console.log("✅ Service Worker registrado!"))
+    .catch(err => console.error("❌ Falha ao registrar o Service Worker:", err));
+}
+
