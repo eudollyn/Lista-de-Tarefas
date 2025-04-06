@@ -225,4 +225,9 @@ function carregarTarefasDaNuvem() {
     // carregar no DOM
   });
 }
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(() => console.log('Service Worker registrado!'))
+    .catch(erro => console.log('Erro ao registrar SW:', erro));
+}
 
