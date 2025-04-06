@@ -1,0 +1,285 @@
+:root {
+  --bg: #f0f0f0;
+  --text: #111;
+  --primary: #4caf50;
+  --secondary: #e0e0e0;
+  --card: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+body.dark {
+  --bg: #121212;
+  --text: #eee;
+  --primary: #81c784;
+  --secondary: #333;
+  --card: #1e1e1e;
+  --shadow: rgba(255, 255, 255, 0.05);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2rem;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Container principal */
+.container {
+  max-width: 600px;
+  margin: auto;
+  background-color: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 12px var(--shadow);
+  padding: 2rem;
+  animation: fadeIn 0.5s ease;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+/* Caixa de entrada de tarefas */
+.input-tarefa {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.input-tarefa input,
+.input-tarefa select {
+  flex: 1 1 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--secondary);
+  font-size: 1rem;
+  background-color: var(--card);
+  color: var(--text);
+  box-shadow: 0 2px 5px var(--shadow);
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-tarefa button {
+  padding: 10px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.input-tarefa button:hover {
+  opacity: 0.85;
+}
+
+/* Lista de tarefas */
+ul#listaTarefas {
+  list-style: none;
+  margin-top: 1rem;
+  padding: 0;
+}
+
+ul#listaTarefas li {
+  background: var(--secondary);
+  padding: 0.8rem;
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  animation: slideUp 0.3s ease;
+}
+
+ul#listaTarefas li.feito span,
+ul#listaTarefas li.feito .texto-tarefa {
+  text-decoration: line-through;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+/* Botões das tarefas */
+li button.check {
+  margin-left: 8px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+li button.check:hover {
+  transform: scale(1.1);
+}
+
+ul#listaTarefas li button {
+  background-color: crimson;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Botões extras */
+.extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.extras button {
+  flex: 1 1 calc(50% - 10px);
+  padding: 10px;
+  font-size: 0.9rem;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.extras button:hover {
+  background-color: #555;
+}
+
+/* Pomodoro */
+.pomodoro {
+  background: #1f1f1f;
+  padding: 20px;
+  margin-top: 30px;
+  border-radius: 10px;
+  text-align: center;
+  color: white;
+}
+
+#tempo {
+  font-size: 2rem;
+  margin: 10px 0;
+}
+
+.pomodoro button {
+  margin: 5px;
+  padding: 8px 15px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.pomodoro button:hover {
+  background: #45a049;
+}
+
+.entrada-tempo {
+  margin-bottom: 10px;
+  color: white;
+}
+
+.entrada-tempo input {
+  width: 60px;
+  padding: 5px;
+  border-radius: 5px;
+  border: none;
+  font-size: 1rem;
+}
+
+/* Contador */
+.contador {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 30px;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  z-index: 1000;
+}
+
+.toast.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Rodapé */
+.rodape,
+footer {
+  margin-top: 40px;
+  text-align: center;
+  padding: 20px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  color: var(--text);
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadein {
+  from { bottom: 10px; opacity: 0; }
+  to { bottom: 30px; opacity: 1; }
+}
+
+@keyframes fadeout {
+  from { bottom: 30px; opacity: 1; }
+  to { bottom: 10px; opacity: 0; }
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+  .input-tarefa input,
+  .input-tarefa select,
+  .input-tarefa button,
+  .extras button {
+    flex: 1 1 100%;
+  }
+
+  .contador {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+}

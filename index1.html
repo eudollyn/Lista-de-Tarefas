@@ -1,0 +1,90 @@
+-<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minha Lista de Tarefas</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f44336" />
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="icon" sizes="192x192" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.png" sizes="192x192">
+<meta name="theme-color" content="#ff6347">
+<body>
+  <div class="container">
+    <header>
+      <h1>📝 Minha Lista de Tarefas</h1>
+    </header>
+
+    <section class="contador" aria-label="Contador de tarefas">
+      <span id="total">Total: 0</span>
+      <span id="pendentes">Pendentes: 0</span>
+    </section>
+
+    <section class="pomodoro" aria-label="Temporizador Pomodoro">
+      <h2>🍅 Temporizador Pomodoro</h2>
+
+      <div class="entrada-tempo">
+        <label for="entradaMinutos">Tempo (min):</label>
+        <input type="number" id="entradaMinutos" min="1" max="90" value="25" />
+      </div>
+
+      <div id="tempo">25:00</div>
+
+      <button onclick="iniciarPomodoro()">Iniciar</button>
+      <button onclick="pausarPomodoro()">Pausar</button>
+      <button onclick="resetarPomodoro()">Resetar</button>
+    </section>
+
+    <section class="input-tarefa" aria-label="Adicionar nova tarefa">
+      <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." aria-label="Nova tarefa" />
+      <select id="categoria" aria-label="Categoria da tarefa">
+        <option value="Pessoal">Pessoal</option>
+        <option value="Trabalho">Trabalho</option>
+        <option value="Estudos">Estudos</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <button onclick="adicionarTarefa()">Adicionar</button>
+    </section>
+
+    <section class="extras" aria-label="Funções extras">
+      <button onclick="exportarTXT()">Exportar TXT</button>
+      <button onclick="exportarPDF()">Exportar PDF</button>
+      <button onclick="limparTudo()">Limpar Tudo</button>
+      <button onclick="alternarTema()">Alternar Tema</button>
+    </section>
+
+    <ul id="listaTarefas" aria-label="Lista de tarefas"></ul>
+  </div>
+
+  <div class="toast" id="toast">Tarefa adicionada!</div>
+
+  <footer class="rodape">
+    <p>Criado por <strong>Erick Carmo</strong> 💻</p>
+  </footer>
+
+  <!-- Áudios -->
+  <audio id="somAdicionar" src="assets/add.wav" preload="auto"></audio>
+  <audio id="somRemover" src="assets/remove.wav" preload="auto"></audio>
+  <audio id="alert" src="assets/alert.wav" preload="auto"></audio>
+
+  <!-- Script -->
+  <script src="script.js"></script>
+</body>
+</html>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(() => console.log("✔️ Service Worker registrado"))
+      .catch(err => console.error("❌ Erro ao registrar SW", err));
+  }
+</script>
+
