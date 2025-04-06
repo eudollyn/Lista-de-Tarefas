@@ -193,4 +193,36 @@ if ("serviceWorker" in navigator) {
     .then(() => console.log("✅ Service Worker registrado!"))
     .catch(err => console.error("❌ Falha ao registrar o Service Worker:", err));
 }
+Notification.requestPermission().then(permission => {
+  if (permission === "granted") {
+    new Notification("🔔 Notificações ativadas!");
+  }
+});
+if (Notification.permission === "granted") {
+  new Notification("✅ Pomodoro finalizado! Faça uma pausa.");
+}
+
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMINIO.firebaseapp.com",
+  databaseURL: "https://SEU_DOMINIO.firebaseio.com",
+  projectId: "SEU_PROJETO",
+  storageBucket: "SEU_BUCKET",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
+function salvarTarefasNaNuvem(tarefas) {
+  database.ref("tarefas").set(tarefas);
+}
+
+function carregarTarefasDaNuvem() {
+  database.ref("tarefas").once("value").then(snapshot => {
+    const tarefas = snapshot.val() || [];
+    // carregar no DOM
+  });
+}
 
