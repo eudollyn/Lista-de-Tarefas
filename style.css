@@ -31,6 +31,14 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
+/* Foco visível */
+button:focus,
+input:focus,
+select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 /* Container principal */
 .container {
   max-width: 600px;
@@ -90,6 +98,8 @@ ul#listaTarefas {
   list-style: none;
   margin-top: 1rem;
   padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 ul#listaTarefas li {
@@ -137,7 +147,7 @@ ul#listaTarefas li button {
 }
 
 /* Botões extras */
-.extras {
+.botoes-extras {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -145,7 +155,7 @@ ul#listaTarefas li button {
   margin-top: 1rem;
 }
 
-.extras button {
+.botoes-extras button {
   flex: 1 1 calc(50% - 10px);
   padding: 10px;
   font-size: 0.9rem;
@@ -157,7 +167,7 @@ ul#listaTarefas li button {
   transition: background-color 0.3s ease;
 }
 
-.extras button:hover {
+.botoes-extras button:hover {
   background-color: #555;
 }
 
@@ -195,6 +205,22 @@ ul#listaTarefas li button {
 .entrada-tempo {
   margin-bottom: 10px;
   color: white;
+}
+
+.pomodoro #pararAlarme {
+  margin: 5px;
+  padding: 8px 15px;
+  background: #d32f2f; /* Vermelho para destacar */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.pomodoro #pararAlarme:hover {
+  background: #b71c1c;
 }
 
 .entrada-tempo input {
@@ -282,4 +308,152 @@ footer {
     align-items: center;
     gap: 5px;
   }
+}
+
+.prazo {
+  color: #ff9900;
+  font-weight: bold;
+}
+
+li.animada .prazo.vencendo {
+  color: red;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+.prazo.vencida {
+  color: #d32f2f;
+  font-weight: bold;
+  animation: piscar 1s infinite;
+}
+
+li.feito .prazo.vencida {
+  animation: none;
+  color: #4CAF50;
+}
+
+@keyframes piscar {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+/* Acessibilidade: reduz movimento */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.filtro-tarefas {
+  margin: 1rem 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.filtro-tarefas label {
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.filtro-tarefas select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid var(--secondary);
+  background-color: var(--card);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.filtro-tarefas {
+  margin: 1rem 0;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+#graficoTarefas {
+  margin-top: 2rem;
+  max-width: 100%;
+}
+
+.input-tarefa {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input-tarefa input[type="text"],
+.input-tarefa select,
+.input-tarefa input[type="date"] {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--secondary);
+  background-color: var(--card);
+  color: var(--text);
+  font-size: 1rem;
+  flex: 1;
+}
+
+.label-recorrente {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem; /* Reduzido para aproximar o "?" do texto */
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.input-tarefa input[type="checkbox"] {
+  width: 14px; /* Tamanho menor para o checkbox */
+  height: 14px;
+  accent-color: var(--primary); /* Cor do checkbox (verde) */
+  cursor: pointer;
+  margin-left: 0.3rem; /* Pequeno espaço entre o label e o checkbox */
+}
+
+.btn-ajuda {
+  background-color: #d3d3d3; /* Cinza claro, como na imagem */
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  width: 16px; /* Tamanho menor para o botão "?" */
+  height: 16px;
+  font-size: 0.7rem; /* Texto menor para o "?" */
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1; /* Garante que o "?" fique centralizado */
+}
+
+.btn-ajuda:hover {
+  background-color: #b0b0b0; /* Cinza um pouco mais escuro no hover */
+}
+
+.input-tarefa button#adicionarTarefa {
+  background-color: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.input-tarefa button#adicionarTarefa:hover {
+  background-color: var(--primary-hover);
 }
