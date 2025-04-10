@@ -1,19 +1,21 @@
 :root {
-  --bg: #f0f0f0;
-  --text: #111;
-  --primary: #4caf50;
-  --secondary: #e0e0e0;
-  --card: #ffffff;
-  --shadow: rgba(0, 0, 0, 0.1);
+  --background: #1a1a1a;
+  --card: #2a2a2a;
+  --text: #ffffff;
+  --primary: #ff6347;
+  --primary-hover: #e55b41; /* Adicionado */
+  --secondary: #333333;
+  --shadow: rgba(0, 0, 0, 0.3);
 }
 
-body.dark {
-  --bg: #121212;
-  --text: #eee;
-  --primary: #81c784;
-  --secondary: #333;
-  --card: #1e1e1e;
-  --shadow: rgba(255, 255, 255, 0.05);
+.tema-claro {
+  --background: #f0f0f0;
+  --card: #ffffff;
+  --text: #333333;
+  --primary: #ff6347;
+  --primary-hover: #e55b41;
+  --secondary: #e0e0e0;
+  --shadow: rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -24,7 +26,7 @@ body.dark {
 }
 
 body {
-  background-color: var(--bg);
+  background-color: var(--background);
   color: var(--text);
   min-height: 100vh;
   padding: 2rem;
@@ -60,12 +62,14 @@ h1 {
 .input-tarefa {
   display: flex;
   gap: 0.5rem;
+  margin: 1rem 0;
+  align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
 }
 
-.input-tarefa input,
-.input-tarefa select {
+.input-tarefa input[type="text"],
+.input-tarefa select,
+.input-tarefa input[type="date"] {
   flex: 1 1 100%;
   padding: 10px;
   border-radius: 10px;
@@ -90,7 +94,58 @@ h1 {
 }
 
 .input-tarefa button:hover {
-  opacity: 0.85;
+  background-color: var(--primary-hover);
+}
+
+.label-recorrente {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.input-tarefa input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  margin-left: 0.3rem;
+}
+
+.btn-ajuda {
+  background-color: #d3d3d3;
+  color: #333;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btn-ajuda:hover {
+  background-color: #b0b0b0;
+}
+
+.input-tarefa button#adicionarTarefa {
+  background-color: var(--primary);
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.input-tarefa button#adicionarTarefa:hover {
+  background-color: var(--primary-hover);
 }
 
 /* Lista de tarefas */
@@ -121,21 +176,6 @@ ul#listaTarefas li.feito .texto-tarefa {
 }
 
 /* Botões das tarefas */
-li button.check {
-  margin-left: 8px;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 4px 8px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-li button.check:hover {
-  transform: scale(1.1);
-}
-
 ul#listaTarefas li button {
   background-color: crimson;
   padding: 0.4rem 0.6rem;
@@ -210,7 +250,7 @@ ul#listaTarefas li button {
 .pomodoro #pararAlarme {
   margin: 5px;
   padding: 8px 15px;
-  background: #d32f2f; /* Vermelho para destacar */
+  background: #d32f2f;
   color: white;
   border: none;
   border-radius: 8px;
@@ -357,6 +397,7 @@ li.feito .prazo.vencida {
   gap: 0.5rem;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .filtro-tarefas label {
@@ -373,87 +414,109 @@ li.feito .prazo.vencida {
   font-size: 1rem;
 }
 
-.filtro-tarefas {
-  margin: 1rem 0;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
 #graficoTarefas {
   margin-top: 2rem;
   max-width: 100%;
 }
 
-.input-tarefa {
+/* Botões de Modos de Visualização */
+.modos-visualizacao {
   display: flex;
   gap: 0.5rem;
-  margin: 1rem 0;
-  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.modos-visualizacao button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--secondary);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.modos-visualizacao button:hover {
+  background-color: #555;
+}
+
+.modos-visualizacao button.modo-ativo {
+  background-color: var(--primary);
+  color: white;
+}
+
+/* Modo Kanban */
+.kanban-view {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
   flex-wrap: wrap;
 }
 
-.input-tarefa input[type="text"],
-.input-tarefa select,
-.input-tarefa input[type="date"] {
-  padding: 8px;
-  border-radius: 5px;
-  border: 1px solid var(--secondary);
-  background-color: var(--card);
-  color: var(--text);
-  font-size: 1rem;
+.kanban-column {
   flex: 1;
+  min-width: 200px;
+  background-color: var(--card);
+  border-radius: 10px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px var(--shadow);
 }
 
-.label-recorrente {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem; /* Reduzido para aproximar o "?" do texto */
-  font-size: 0.9rem;
+.kanban-column h3 {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
   color: var(--text);
 }
 
-.input-tarefa input[type="checkbox"] {
-  width: 14px; /* Tamanho menor para o checkbox */
-  height: 14px;
-  accent-color: var(--primary); /* Cor do checkbox (verde) */
-  cursor: pointer;
-  margin-left: 0.3rem; /* Pequeno espaço entre o label e o checkbox */
+.kanban-tasks {
+  min-height: 100px;
 }
 
-.btn-ajuda {
-  background-color: #d3d3d3; /* Cinza claro, como na imagem */
-  color: #333;
-  border: none;
-  border-radius: 50%;
-  width: 16px; /* Tamanho menor para o botão "?" */
-  height: 16px;
-  font-size: 0.7rem; /* Texto menor para o "?" */
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+.kanban-tasks li {
+  background: var(--secondary);
+  padding: 0.8rem;
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  line-height: 1; /* Garante que o "?" fique centralizado */
+  animation: slideUp 0.3s ease;
+  cursor: move;
 }
 
-.btn-ajuda:hover {
-  background-color: #b0b0b0; /* Cinza um pouco mais escuro no hover */
+.kanban-tasks li.feito span,
+.kanban-tasks li.feito .texto-tarefa {
+  text-decoration: line-through;
+  opacity: 0.6;
 }
 
-.input-tarefa button#adicionarTarefa {
+/* Modo Calendário */
+#calendarioView {
+  margin-top: 1rem;
+}
+
+/* Ajustar o FullCalendar para o tema */
+.fc {
+  background-color: var(--card);
+  border-radius: 10px;
+  box-shadow: 0 2px 5px var(--shadow);
+}
+
+.fc .fc-daygrid-day-number,
+.fc .fc-col-header-cell-cushion {
+  color: var(--text);
+}
+
+.fc .fc-daygrid-event {
   background-color: var(--primary);
-  color: white;
-  padding: 8px 16px;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  color: white;
+  padding: 2px 5px;
 }
 
-.input-tarefa button#adicionarTarefa:hover {
+.fc .fc-daygrid-event:hover {
   background-color: var(--primary-hover);
 }

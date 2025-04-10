@@ -1,46 +1,25 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minha Lista de Tarefas</title>
-
   <!-- Estilos e ícones -->
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icons/icon-192x192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
-  <meta name="theme-color" content="#ff6347" />
-
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192x192.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <meta name="theme-color" content="#ff6347">
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minha Lista de Tarefas</title>
-
-  <!-- Estilos e ícones -->
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icons/icon-192x192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
-  <meta name="theme-color" content="#ff6347" />
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
-</head>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -63,55 +42,78 @@
       <button id="iniciarPomodoro">Iniciar</button>
       <button id="pausarPomodoro">Pausar</button>
       <button id="resetarPomodoro">Resetar</button>
-      <button id="pararAlarme" style="display: none;">Parar Alarme</button> <!-- Novo botão -->
+      <button id="pararAlarme" style="display: none;">Parar Alarme</button>
     </section>
 
+    <section class="input-tarefa" aria-label="Adicionar nova tarefa">
+      <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." aria-label="Nova tarefa" />
+      <select id="categoria" aria-label="Categoria da tarefa">
+        <option value="Pessoal">Pessoal</option>
+        <option value="Trabalho">Trabalho</option>
+        <option value="Estudos">Estudos</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <input type="date" id="prazoTarefa" aria-label="Prazo da tarefa" />
+      <label for="tarefaRecorrente" class="label-recorrente">
+        Recorrente?
+        <button id="ajudaRecorrente" class="btn-ajuda" title="O que é uma tarefa recorrente?">?</button>
+      </label>
+      <input type="checkbox" id="tarefaRecorrente" />
+      <button id="adicionarTarefa">Adicionar</button>
+    </section>
 
-   <section class="input-tarefa" aria-label="Adicionar nova tarefa">
-  <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." aria-label="Nova tarefa" />
-  <select id="categoria" aria-label="Categoria da tarefa">
-    <option value="Pessoal">Pessoal</option>
-    <option value="Trabalho">Trabalho</option>
-    <option value="Estudos">Estudos</option>
-    <option value="Outros">Outros</option>
-  </select>
-  <input type="date" id="prazoTarefa" aria-label="Prazo da tarefa" />
-  <label for="tarefaRecorrente" class="label-recorrente">
-    Recorrente?
-    <button id="ajudaRecorrente" class="btn-ajuda" title="O que é uma tarefa recorrente?">?</button>
-  </label>
-  <input type="checkbox" id="tarefaRecorrente" />
-  <button id="adicionarTarefa">Adicionar</button>
-</section>
+    <section class="botoes-extras" aria-label="Ações extras">
+      <button id="exportarTXT">Exportar TXT</button>
+      <button id="exportarPDF">Exportar PDF</button>
+      <button id="limparTudo">Limpar Tudo</button>
+      <button id="alternarTema">Alternar Tema</button>
+    </section>
 
-<section class="botoes-extras" aria-label="Ações extras">
-  <button id="exportarTXT">Exportar TXT</button>
-  <button id="exportarPDF">Exportar PDF</button>
-  <button id="limparTudo">Limpar Tudo</button>
-  <button id="alternarTema">Alternar Tema</button>
-</section>
+    <section class="filtro-tarefas" aria-label="Filtrar tarefas">
+      <div class="modos-visualizacao">
+        <button id="modoLista" class="modo-ativo">Lista</button>
+        <button id="modoKanban">Kanban</button>
+        <button id="modoCalendario">Calendário</button>
+      </div>
+      <label for="filtroCategoria">Filtrar por categoria:</label>
+      <select id="filtroCategoria">
+        <option value="todas">Todas</option>
+        <option value="Pessoal">Pessoal</option>
+        <option value="Trabalho">Trabalho</option>
+        <option value="Estudos">Estudos</option>
+        <option value="Outros">Outros</option>
+      </select>
+      <label for="ordenarTarefas">Ordenar por:</label>
+      <select id="ordenarTarefas">
+        <option value="padrao">Padrão</option>
+        <option value="prazo">Prazo (Mais Próximo)</option>
+      </select>
+    </section>
 
-<!-- Adicionar o filtro -->
-<section class="filtro-tarefas" aria-label="Filtrar tarefas">
-  <label for="filtroCategoria">Filtrar por categoria:</label>
-  <select id="filtroCategoria">
-    <option value="todas">Todas</option>
-    <option value="Pessoal">Pessoal</option>
-    <option value="Trabalho">Trabalho</option>
-    <option value="Estudos">Estudos</option>
-    <option value="Outros">Outros</option>
-  </select>
-<label for="ordenarTarefas">Ordenar por:</label>
-  <select id="ordenarTarefas">
-    <option value="padrao">Padrão</option>
-    <option value="prazo">Prazo (Mais Próximo)</option>
-</select> 	
-</section>
+    <ul id="listaTarefas" aria-label="Lista de tarefas"></ul>
 
-<ul id="listaTarefas" aria-label="Lista de tarefas"></ul>
+    <!-- Modo Kanban -->
+    <section id="kanbanView" class="kanban-view" style="display: none;">
+      <div class="kanban-column" id="aFazer">
+        <h3>A Fazer</h3>
+        <div class="kanban-tasks" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      </div>
+      <div class="kanban-column" id="emProgresso">
+        <h3>Em Progresso</h3>
+        <div class="kanban-tasks" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      </div>
+      <div class="kanban-column" id="concluido">
+        <h3>Concluído</h3>
+        <div class="kanban-tasks" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+      </div>
+    </section>
 
-    <!-- Gráfico -->
-    <canvas id="graficoTarefas" width="400" height="200"></canvas>
+    <!-- Modo Calendário -->
+    <section id="calendarioView" style="display: none;">
+      <div id="calendario"></div>
+    </section>
+
+    <canvas id="graficoTarefas" aria-label="Gráfico de tarefas concluídas por categoria"></canvas>
   </div>
 
   <!-- Toast -->
@@ -125,10 +127,10 @@
   <!-- Áudios -->
   <audio id="somAdicionar" src="assets/add.wav" preload="auto"></audio>
   <audio id="somRemover" src="assets/remove.wav" preload="auto"></audio>
-  <audio id="pomodoroAlarm" src="pomodoroalarm.mp3" preload="auto"></audio> <!-- Caminho ajustado -->
+  <audio id="pomodoroAlarm" src="pomodoroalarm.mp3" preload="auto"></audio>
 
-  <!-- Script principal em módulo -->
- <script src="script.js"></script>
+  <!-- Script principal -->
+  <script src="script.js"></script>
 
   <!-- Service Worker -->
   <script>
