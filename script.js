@@ -373,6 +373,8 @@ function verificarPrazos() {
 }
 
 // Função para atualizar o gráfico
+let chartInstance = null;
+
 function atualizarGrafico() {
   const ctx = document.getElementById("graficoTarefas").getContext("2d");
   const categorias = ["Pessoal", "Trabalho", "Estudos", "Outros"];
@@ -380,7 +382,13 @@ function atualizarGrafico() {
     tarefas.filter(t => t.categoria === categoria && t.feito).length
   );
 
-  new Chart(ctx, {
+  // Destruir o gráfico existente, se houver
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  // Criar um novo gráfico
+  chartInstance = new Chart(ctx, {
     type: "bar",
     data: {
       labels: categorias,

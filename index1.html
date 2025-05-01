@@ -7,7 +7,7 @@
   <!-- Estilos e ícones -->
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icons/icon-192x192.png" sizes="192x192">
+  <link rel="icon" href="./icon.png" sizes="192x192">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <meta name="theme-color" content="#ff6347">
   <!-- Chart.js -->
@@ -16,28 +16,28 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <!-- Script com fallback para SheetJS -->
   <script>
-    function loadScript(url, callback) {
-      const script = document.createElement("script");
-      script.src = url;
-      script.onload = callback;
-      script.onerror = () => console.error(`Falha ao carregar o script: ${url}`);
-      document.head.appendChild(script);
+  function loadScript(url, callback) {
+    const script = document.createElement("script");
+    script.src = url;
+    script.onload = callback;
+    script.onerror = () => console.error(`Falha ao carregar o script: ${url}`);
+    document.head.appendChild(script);
+  }
+
+  loadScript("https://cdn.sheetjs.com/xlsx-latest/dist/xlsx.full.min.js", () => {
+    console.log("SheetJS carregado com sucesso!");
+  });
+
+  setTimeout(() => {
+    if (typeof XLSX === "undefined") {
+      console.warn("SheetJS não carregado pelo CDN principal. Tentando fallback...");
+      loadScript("https://unpkg.com/xlsx/dist/xlsx.full.min.js", () => {
+        console.log("SheetJS carregado pelo fallback!");
+      });
     }
-
-    loadScript("https://cdn.sheetjs.com/xlsx-0.21.0/package/dist/xlsx.full.min.js", () => {
-      console.log("SheetJS carregado com sucesso!");
-    });
-
-    setTimeout(() => {
-      if (typeof XLSX === "undefined") {
-        console.warn("SheetJS não carregado pelo CDN principal. Tentando fallback...");
-        loadScript("https://unpkg.com/xlsx@0.21.0/dist/xlsx.full.min.js", () => {
-          console.log("SheetJS carregado pelo fallback!");
-        });
-      }
-    }, 3000);
-  </script>
-  <!-- Firebase -->
+  }, 3000);
+</script>  
+<!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
   <!-- FullCalendar -->
