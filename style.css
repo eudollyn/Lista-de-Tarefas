@@ -574,3 +574,23 @@ li.feito .prazo.vencida {
   padding: 5px 0;
   border-bottom: 1px solid #ddd;
 }
+
+.tags {
+  margin-left: 10px;
+  font-size: 0.9em;
+  color: #888;
+}
+
+.personalizar-tema {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: var(--card);
+  border-radius: 5px;
+}
+.personalizar-tema h2 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+.personalizar-tema label {
+  margin-right: 10px;
+}

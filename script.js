@@ -32,13 +32,29 @@ function carregarTarefas() {
   tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   const agora = new Date();
 
-  tarefas.forEach(({ texto, categoria, prazo, feito, recorrente, prioridade }, index) => {
+  const filtroCategoria = document.getElementById("filtroCategoria").value;
+  const filtroStatus = document.getElementById("filtroStatus").value;
+  const ordenarPor = document.getElementById("ordenarTarefas").value;
+
+  let tarefasFiltradas = tarefas.filter(tarefa => {
+    const categoriaMatch = filtroCategoria === "todas" || tarefa.categoria === filtroCategoria;
+    const statusMatch = filtroStatus === "todas" || (filtroStatus === "pendentes" && !tarefa.feito) || (filtroStatus === "concluídas" && tarefa.feito);
+    return categoriaMatch && statusMatch;
+  });
+
+  if (ordenarPor === "prazo") {
+    tarefasFiltradas.sort((a, b) => new Date(a.prazo || "9999-12-31") - new Date(b.prazo || "9999-12-31"));
+  } else if (ordenarPor === "prioridade") {
+    const prioridadeOrdem = { alta: 1, média: 2, baixa: 3 };
+    tarefasFiltradas.sort((a, b) => prioridadeOrdem[a.prioridade] - prioridadeOrdem[b.prioridade]);
+  }
+
+  tarefasFiltradas.forEach(({ texto, categoria, prazo, feito, recorrente, prioridade, tags }, index) => {
     const li = document.createElement("li");
     li.className = "animada";
     li.dataset.index = index;
     if (feito) li.classList.add("feito");
 
-    // Verificar prazo para destacar
     if (prazo && !feito) {
       const prazoDate = new Date(prazo);
       const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
@@ -51,8 +67,9 @@ function carregarTarefas() {
 
     const dataPrazo = prazo ? `<small class="prazo">⏰ ${prazo}</small>` : "";
     const dataPrioridade = prioridade ? `<small class="prioridade">Prioridade: ${prioridade}</small>` : "";
+    const dataTags = tags && tags.length ? `<small class="tags">Tags: ${tags.join(", ")}</small>` : "";
     li.innerHTML = `
-      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo} ${dataPrioridade}</span>
+      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo} ${dataPrioridade} ${dataTags}</span>
       <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
       <button onclick="editarTarefa(this)">✏️</button>
       <button onclick="removerTarefa(this)">🗑️</button>
@@ -261,6 +278,7 @@ function adicionarTarefa() {
   const prazo = document.getElementById("prazoTarefa").value;
   const recorrente = document.getElementById("tarefaRecorrente").checked;
   const prioridade = document.getElementById("prioridadeTarefa").value;
+  const tagsInput = document.getElementById("tagsTarefa").value;
   const texto = inputTarefa.value.trim();
 
   if (!texto) {
@@ -268,7 +286,7 @@ function adicionarTarefa() {
     return;
   }
 
-if (!categoria) {
+  if (!categoria) {
     alert("⚠️ Por favor, selecione uma categoria!");
     return;
   }
@@ -280,14 +298,16 @@ if (!categoria) {
 
   tocarSom("somAdicionar");
 
+  const tags = tagsInput.split(",").map(tag => tag.trim()).filter(tag => tag);
   const novaTarefa = {
     texto,
     categoria,
-    prazo,
+    prazo: prazo || null,
     feito: false,
     recorrente,
     emProgresso: false,
     prioridade,
+    tags,
     historico: [{
       acao: "Criada",
       data: new Date().toISOString()
@@ -297,12 +317,14 @@ if (!categoria) {
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
 
   inputTarefa.value = "";
+  document.getElementById("tagsTarefa").value = "";
   document.getElementById("prazoTarefa").value = "";
   document.getElementById("tarefaRecorrente").checked = false;
 
   carregarTarefas();
   atualizarContador();
   atualizarGrafico();
+  tocarSom("somAdicionar");
   mostrarToast("✅ Tarefa adicionada com sucesso!");
 }
 
@@ -444,7 +466,15 @@ function mostrarToast(mensagem) {
 // Função para solicitar permissão de notificações
 function solicitarPermissaoNotificacoes() {
   if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-    Notification.requestPermission();
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        console.log('Permissão para notificações concedida!');
+        mostrarToast('✅ Permissão para notificações concedida!');
+      } else {
+        console.log('Permissão para notificações negada.');
+        mostrarToast('⚠️ Permissão para notificações negada.');
+      }
+    });
   }
 }
 
@@ -453,12 +483,21 @@ function verificarPrazos() {
   const agora = new Date();
   tarefas.forEach(tarefa => {
     if (tarefa.prazo && !tarefa.feito) {
-      const prazo = new Date(tarefa.prazo);
-      const diffDias = Math.ceil((prazo - agora) / (1000 * 60 * 60 * 24));
-      if (diffDias < 0) {
-        mostrarToast(`⚠️ Tarefa "${tarefa.texto}" está atrasada!`);
-      } else if (diffDias <= 1) {
-        mostrarToast(`⏰ Tarefa "${tarefa.texto}" vence em breve!`);
+      const prazoDate = new Date(tarefa.prazo);
+      const diffHoras = (prazoDate - agora) / (1000 * 60 * 60);
+      if (diffHoras <= 0) {
+        mostrarToast(`⚠️ A tarefa "${tarefa.texto}" está vencida!`);
+      } else if (diffHoras <= 24) {
+        mostrarToast(`⏰ A tarefa "${tarefa.texto}" vence em breve!`);
+        // Enviar notificação push
+        if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification('Tarefa Perto de Vencer', {
+              body: `A tarefa "${tarefa.texto}" vence em breve!`,
+              icon: './icon.png',
+            });
+          });
+        }
       }
     }
   });
@@ -637,7 +676,7 @@ function exportarExcel() {
 
 // Função para limpar tudo
 function limparTudo() {
-if (tarefas.length === 0) {
+  if (tarefas.length === 0) {
     mostrarToast("⚠️ Não há tarefas para limpar!");
     return;
   }
@@ -650,8 +689,6 @@ if (tarefas.length === 0) {
     mostrarToast("🗑️ Todas as tarefas foram removidas!");
   }
 }
-
-
 
 // Função para filtrar tarefas
 function filtrarTarefas() {
@@ -827,12 +864,15 @@ function mostrarAjudaRecorrente() {
 // Inicialização
 document.addEventListener("DOMContentLoaded", function() {
   console.log("Inicializando aplicação...");
-  carregarTarefas();
+
+  // Pedir permissão para notificações
   solicitarPermissaoNotificacoes();
+
+  carregarTarefas();
   mostrarToast("🎉 Bem-vindo à sua lista de tarefas!");
   carregarTema();
   verificarPrazos();
-  setInterval(verificarPrazos, 60000);
+  setInterval(verificarPrazos, 60000); // Verifica prazos a cada 60 segundos
 
   // Ouvintes de eventos
   document.getElementById("adicionarTarefa").addEventListener("click", adicionarTarefa);
@@ -871,6 +911,54 @@ document.addEventListener("DOMContentLoaded", function() {
       atualizarTempo();
     }
   });
+
+// Atualizar tempo ao voltar para a aba
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !pausado && tempoInicio !== null) {
+      atualizarTempo();
+    }
+  });
+
+document.addEventListener("keydown", (e) => {
+  // Adicionar tarefa ao pressionar Enter
+  if (e.key === "Enter" && document.activeElement === document.getElementById("novaTarefa")) {
+    adicionarTarefa();
+  }
+  // Iniciar/pausar Pomodoro com Espaço
+  if (e.key === " " && !e.target.matches("input, select")) {
+    e.preventDefault();
+    if (pausado) {
+      iniciarPomodoro();
+    } else {
+      pausarPomodoro();
+    }
+  }
+  // Limpar tudo com Ctrl + Shift + L
+  if (e.ctrlKey && e.shiftKey && e.key === "L") {
+    limparTudo();
+  }
+});
+
+document.getElementById("corPrimaria").addEventListener("input", (e) => {
+  document.documentElement.style.setProperty("--primary", e.target.value);
+  localStorage.setItem("corPrimaria", e.target.value);
+});
+
+document.getElementById("corFundo").addEventListener("input", (e) => {
+  document.documentElement.style.setProperty("--background", e.target.value);
+  localStorage.setItem("corFundo", e.target.value);
+});
+
+// Carregar cores salvas ao iniciar
+document.addEventListener("DOMContentLoaded", () => {
+  const corPrimariaSalva = localStorage.getItem("corPrimaria") || "#ff6347";
+  const corFundoSalva = localStorage.getItem("corFundo") || "#1a1a1a";
+  document.documentElement.style.setProperty("--primary", corPrimariaSalva);
+  document.documentElement.style.setProperty("--background", corFundoSalva);
+  document.getElementById("corPrimaria").value = corPrimariaSalva;
+  document.getElementById("corFundo").value = corFundoSalva;
+  // ... resto do código
+});
 
   // Verificar áudios
   console.log("somAdicionar carregado:", document.getElementById("somAdicionar").readyState === 4 ? "Sim" : "Não");
