@@ -7,6 +7,7 @@ let pomodoroInterval;
 let tempoInicio = null;
 let duracaoTotal = 1500; // 25 minutos em segundos
 let pausado = true;
+let chartInstance = null;
 
 // Função para tocar som com fallback
 function tocarSom(somId) {
@@ -29,14 +30,29 @@ function carregarTarefas() {
   const lista = document.getElementById("listaTarefas");
   lista.innerHTML = "";
   tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
-  tarefas.forEach(({ texto, categoria, prazo, feito, recorrente }, index) => {
+  const agora = new Date();
+
+  tarefas.forEach(({ texto, categoria, prazo, feito, recorrente, prioridade }, index) => {
     const li = document.createElement("li");
     li.className = "animada";
     li.dataset.index = index;
     if (feito) li.classList.add("feito");
+
+    // Verificar prazo para destacar
+    if (prazo && !feito) {
+      const prazoDate = new Date(prazo);
+      const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
+      if (diffDias < 0) {
+        li.classList.add("tarefa-vencida");
+      } else if (diffDias <= 1) {
+        li.classList.add("tarefa-vence-em-breve");
+      }
+    }
+
     const dataPrazo = prazo ? `<small class="prazo">⏰ ${prazo}</small>` : "";
+    const dataPrioridade = prioridade ? `<small class="prioridade">Prioridade: ${prioridade}</small>` : "";
     li.innerHTML = `
-      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo}</span>
+      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo} ${dataPrioridade}</span>
       <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
       <button onclick="editarTarefa(this)">✏️</button>
       <button onclick="removerTarefa(this)">🗑️</button>
@@ -45,6 +61,7 @@ function carregarTarefas() {
     lista.appendChild(li);
   });
   atualizarContador();
+  atualizarHistorico();
   if (modoVisualizacao === "kanban") carregarTarefasKanban();
   if (modoVisualizacao === "calendario") carregarTarefasCalendario();
 }
@@ -113,6 +130,7 @@ function carregarTarefasKanban() {
     aFazer.innerHTML = "";
     emProgresso.innerHTML = "";
     concluido.innerHTML = "";
+    const agora = new Date();
 
     tarefas.forEach((tarefa, index) => {
       const li = document.createElement("li");
@@ -120,9 +138,22 @@ function carregarTarefasKanban() {
       li.draggable = true;
       li.dataset.index = index;
       if (tarefa.feito) li.classList.add("feito");
+
+      // Verificar prazo para destacar
+      if (tarefa.prazo && !tarefa.feito) {
+        const prazoDate = new Date(tarefa.prazo);
+        const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
+        if (diffDias < 0) {
+          li.classList.add("tarefa-vencida");
+        } else if (diffDias <= 1) {
+          li.classList.add("tarefa-vence-em-breve");
+        }
+      }
+
       const dataPrazo = tarefa.prazo ? `<small class="prazo">⏰ ${tarefa.prazo}</small>` : "";
+      const dataPrioridade = tarefa.prioridade ? `<small class="prioridade">Prioridade: ${tarefa.prioridade}</small>` : "";
       li.innerHTML = `
-        <span class="${tarefa.feito ? 'concluida' : ''}">${tarefa.texto} <small>[${tarefa.categoria}]</small> ${dataPrazo}</span>
+        <span class="${tarefa.feito ? 'concluida' : ''}">${tarefa.texto} <small>[${tarefa.categoria}]</small> ${dataPrazo} ${dataPrioridade}</span>
         <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
         <button onclick="editarTarefa(this)">✏️</button>
         <button onclick="removerTarefa(this)">🗑️</button>
@@ -229,6 +260,7 @@ function adicionarTarefa() {
   const categoria = document.getElementById("categoria").value;
   const prazo = document.getElementById("prazoTarefa").value;
   const recorrente = document.getElementById("tarefaRecorrente").checked;
+  const prioridade = document.getElementById("prioridadeTarefa").value;
   const texto = inputTarefa.value.trim();
 
   if (!texto) {
@@ -236,9 +268,32 @@ function adicionarTarefa() {
     return;
   }
 
+if (!categoria) {
+    alert("⚠️ Por favor, selecione uma categoria!");
+    return;
+  }
+
+  if (!prioridade) {
+    alert("⚠️ Por favor, selecione uma prioridade!");
+    return;
+  }
+
   tocarSom("somAdicionar");
 
-  tarefas.push({ texto, categoria, prazo, feito: false, recorrente, emProgresso: false });
+  const novaTarefa = {
+    texto,
+    categoria,
+    prazo,
+    feito: false,
+    recorrente,
+    emProgresso: false,
+    prioridade,
+    historico: [{
+      acao: "Criada",
+      data: new Date().toISOString()
+    }]
+  };
+  tarefas.push(novaTarefa);
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
 
   inputTarefa.value = "";
@@ -258,19 +313,36 @@ function concluirTarefa(btn) {
   tarefas[index].feito = !tarefas[index].feito;
   tarefas[index].emProgresso = false;
 
+  tarefas[index].historico.push({
+    acao: tarefas[index].feito ? "Concluída" : "Marcada como pendente",
+    data: new Date().toISOString()
+  });
+
   if (tarefas[index].feito) {
     tocarSom("somAdicionar");
   }
 
   if (tarefas[index].feito && tarefas[index].recorrente) {
-    const { texto, categoria, prazo } = tarefas[index];
+    const { texto, categoria, prazo, prioridade } = tarefas[index];
     let novoPrazo = "";
     if (prazo) {
       const prazoDate = new Date(prazo);
       prazoDate.setDate(prazoDate.getDate() + 1);
       novoPrazo = prazoDate.toISOString().split("T")[0];
     }
-    tarefas.push({ texto, categoria, prazo: novoPrazo, feito: false, recorrente: true, emProgresso: false });
+    tarefas.push({
+      texto,
+      categoria,
+      prazo: novoPrazo,
+      feito: false,
+      recorrente: true,
+      emProgresso: false,
+      prioridade,
+      historico: [{
+        acao: "Criada (recorrente)",
+        data: new Date().toISOString()
+      }]
+    });
   }
 
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
@@ -285,6 +357,11 @@ function concluirTarefa(btn) {
 function removerTarefa(btn) {
   const li = btn.parentElement;
   const index = li.dataset.index;
+
+  tarefas[index].historico.push({
+    acao: "Removida",
+    data: new Date().toISOString()
+  });
 
   tocarSom("somRemover");
 
@@ -304,6 +381,10 @@ function reagendarTarefa(btn) {
   const novoPrazo = prompt("Digite o novo prazo (formato: AAAA-MM-DD):");
   if (novoPrazo) {
     tarefas[index].prazo = novoPrazo;
+    tarefas[index].historico.push({
+      acao: "Prazo alterado para " + novoPrazo,
+      data: new Date().toISOString()
+    });
     localStorage.setItem("tarefas", JSON.stringify(tarefas));
     carregarTarefas();
     atualizarGrafico();
@@ -323,10 +404,17 @@ function editarTarefa(btn) {
 
   const novaCategoria = prompt("Nova categoria (Pessoal, Trabalho, Estudos, Outros):", tarefa.categoria);
   const novoPrazo = prompt("Novo prazo (formato AAAA-MM-DD, deixe vazio para remover):", tarefa.prazo);
+  const novaPrioridade = prompt("Nova prioridade (baixa, média, alta):", tarefa.prioridade);
 
   tarefas[index].texto = novoTexto;
   tarefas[index].categoria = novaCategoria || tarefa.categoria;
   tarefas[index].prazo = novoPrazo || "";
+  tarefas[index].prioridade = novaPrioridade || tarefa.prioridade;
+
+  tarefas[index].historico.push({
+    acao: "Editada",
+    data: new Date().toISOString()
+  });
 
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
   carregarTarefas();
@@ -360,21 +448,23 @@ function solicitarPermissaoNotificacoes() {
   }
 }
 
-// Função para verificar prazos
+// Função para verificar prazos (atualizada para Notificações de Prazo)
 function verificarPrazos() {
-  const hoje = new Date().toISOString().split("T")[0];
+  const agora = new Date();
   tarefas.forEach(tarefa => {
-    if (tarefa.prazo && tarefa.prazo === hoje && !tarefa.feito) {
-      if (Notification.permission === "granted") {
-        new Notification(`⏰ Lembrete: "${tarefa.texto}" vence hoje!`);
+    if (tarefa.prazo && !tarefa.feito) {
+      const prazo = new Date(tarefa.prazo);
+      const diffDias = Math.ceil((prazo - agora) / (1000 * 60 * 60 * 24));
+      if (diffDias < 0) {
+        mostrarToast(`⚠️ Tarefa "${tarefa.texto}" está atrasada!`);
+      } else if (diffDias <= 1) {
+        mostrarToast(`⏰ Tarefa "${tarefa.texto}" vence em breve!`);
       }
     }
   });
 }
 
 // Função para atualizar o gráfico
-let chartInstance = null;
-
 function atualizarGrafico() {
   const ctx = document.getElementById("graficoTarefas").getContext("2d");
   const categorias = ["Pessoal", "Trabalho", "Estudos", "Outros"];
@@ -436,6 +526,10 @@ function carregarTema() {
 
 // Função para exportar como TXT
 function exportarTXT() {
+  if (tarefas.length === 0) {
+    mostrarToast("⚠️ Não há tarefas para exportar!");
+    return;
+  }
   const texto = tarefas.map(t => `${t.texto} [${t.categoria}] ${t.prazo ? `⏰ ${t.prazo}` : ''} ${t.feito ? '✔️' : ''}`).join("\n");
   const blob = new Blob([texto], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
@@ -444,10 +538,15 @@ function exportarTXT() {
   a.download = "tarefas.txt";
   a.click();
   URL.revokeObjectURL(url);
+  mostrarToast("✅ Tarefas exportadas para TXT!");
 }
 
 // Função para exportar como PDF
 function exportarPDF() {
+  if (tarefas.length === 0) {
+    mostrarToast("⚠️ Não há tarefas para exportar!");
+    return;
+  }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.text("Minha Lista de Tarefas", 10, 10);
@@ -457,9 +556,10 @@ function exportarPDF() {
     y += 10;
   });
   doc.save("tarefas.pdf");
+  mostrarToast("✅ Tarefas exportadas para PDF!");
 }
 
-// Função para exportar como Excel
+// Função para exportar como Excel (atualizada para Exportação Filtrada)
 function exportarExcel() {
   console.log("Iniciando exportação para Excel...");
   if (!tarefas || tarefas.length === 0) {
@@ -476,18 +576,35 @@ function exportarExcel() {
 
   try {
     console.log("Formatando dados para Excel...");
-    const dadosExcel = tarefas
+    const filtroCategoria = document.getElementById("filtroCategoria").value;
+    const filtroStatus = document.getElementById("filtroStatus").value || "todas";
+    let tarefasFiltradas = tarefas;
+
+    // Filtro por categoria
+    if (filtroCategoria && filtroCategoria !== "todas") {
+      tarefasFiltradas = tarefasFiltradas.filter(t => t.categoria === filtroCategoria);
+    }
+
+    // Filtro por status (pendente, concluída, todas)
+    if (filtroStatus && filtroStatus !== "todas") {
+      tarefasFiltradas = tarefasFiltradas.filter(t => 
+        filtroStatus === "concluídas" ? t.feito : !t.feito
+      );
+    }
+
+    const dadosExcel = tarefasFiltradas
       .filter(tarefa => tarefa && typeof tarefa === "object")
       .map(tarefa => ({
         Tarefa: tarefa.texto || "Sem descrição",
         Categoria: tarefa.categoria || "Sem categoria",
         Prazo: tarefa.prazo || "Sem prazo",
         Status: tarefa.feito ? "Concluída" : "Pendente",
-        Recorrente: tarefa.recorrente ? "Sim" : "Não"
+        Recorrente: tarefa.recorrente ? "Sim" : "Não",
+        Prioridade: tarefa.prioridade || "Média"
       }));
 
     if (dadosExcel.length === 0) {
-      mostrarToast("⚠️ Nenhuma tarefa válida para exportar!");
+      mostrarToast("⚠️ Nenhuma tarefa válida para exportar com os filtros aplicados!");
       console.log("Nenhuma tarefa válida após filtragem.");
       return;
     }
@@ -501,17 +618,17 @@ function exportarExcel() {
       { wch: 15 }, // Categoria
       { wch: 15 }, // Prazo
       { wch: 10 }, // Status
-      { wch: 10 }  // Recorrente
+      { wch: 10 }, // Recorrente
+      { wch: 10 }  // Prioridade
     ];
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Tarefas");
     console.log("Workbook criado:", workbook);
 
-    // Substituir XLSX.write por XLSX.writeFile
-    XLSX.writeFile(workbook, "Lista_de_Tarefas.xlsx");
+    XLSX.writeFile(workbook, "Lista_de_Tarefas_Filtrada.xlsx");
     console.log("Download iniciado.");
-    mostrarToast("✅ Tarefas exportadas para Excel!");
+    mostrarToast("✅ Tarefas filtradas exportadas para Excel!");
   } catch (error) {
     console.error("Erro ao exportar para Excel:", error);
     mostrarToast("⚠️ Erro ao exportar para Excel: " + error.message);
@@ -520,6 +637,10 @@ function exportarExcel() {
 
 // Função para limpar tudo
 function limparTudo() {
+if (tarefas.length === 0) {
+    mostrarToast("⚠️ Não há tarefas para limpar!");
+    return;
+  }
   if (confirm("Tem certeza que deseja limpar todas as tarefas?")) {
     localStorage.removeItem("tarefas");
     tarefas = [];
@@ -530,20 +651,47 @@ function limparTudo() {
   }
 }
 
+
+
 // Função para filtrar tarefas
 function filtrarTarefas() {
-  const filtro = document.getElementById("filtroCategoria").value;
+  const filtroCategoria = document.getElementById("filtroCategoria").value;
+  const filtroStatus = document.getElementById("filtroStatus").value || "todas";
   const lista = document.getElementById("listaTarefas");
   lista.innerHTML = "";
-  const tarefasFiltradas = filtro === "todas" ? tarefas : tarefas.filter(t => t.categoria === filtro);
-  tarefasFiltradas.forEach(({ texto, categoria, prazo, feito }, index) => {
+  const agora = new Date();
+
+  let tarefasFiltradas = tarefas;
+  if (filtroCategoria !== "todas") {
+    tarefasFiltradas = tarefasFiltradas.filter(t => t.categoria === filtroCategoria);
+  }
+  if (filtroStatus !== "todas") {
+    tarefasFiltradas = tarefasFiltradas.filter(t => 
+      filtroStatus === "concluídas" ? t.feito : !t.feito
+    );
+  }
+
+  tarefasFiltradas.forEach(({ texto, categoria, prazo, feito, prioridade }, index) => {
     const li = document.createElement("li");
     li.className = "animada";
     li.dataset.index = index;
     if (feito) li.classList.add("feito");
+
+    // Verificar prazo para destacar
+    if (prazo && !feito) {
+      const prazoDate = new Date(prazo);
+      const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
+      if (diffDias < 0) {
+        li.classList.add("tarefa-vencida");
+      } else if (diffDias <= 1) {
+        li.classList.add("tarefa-vence-em-breve");
+      }
+    }
+
     const dataPrazo = prazo ? `<small class="prazo">⏰ ${prazo}</small>` : "";
+    const dataPrioridade = prioridade ? `<small class="prioridade">Prioridade: ${prioridade}</small>` : "";
     li.innerHTML = `
-      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo}</span>
+      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo} ${dataPrioridade}</span>
       <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
       <button onclick="editarTarefa(this)">✏️</button>
       <button onclick="removerTarefa(this)">🗑️</button>
@@ -563,10 +711,28 @@ function ordenarTarefas() {
       if (!b.prazo) return -1;
       return new Date(a.prazo) - new Date(b.prazo);
     });
+  } else if (ordenacao === "prioridade") {
+    const prioridadeOrdem = { alta: 3, média: 2, baixa: 1 };
+    tarefas.sort((a, b) => prioridadeOrdem[b.prioridade] - prioridadeOrdem[a.prioridade]);
   }
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
   carregarTarefas();
   filtrarTarefas();
+}
+
+// Função para atualizar o histórico
+function atualizarHistorico() {
+  const listaHistorico = document.getElementById("listaHistorico");
+  listaHistorico.innerHTML = "";
+  
+  tarefas.forEach(tarefa => {
+    tarefa.historico.forEach(evento => {
+      const li = document.createElement("li");
+      const dataFormatada = new Date(evento.data).toLocaleString("pt-BR");
+      li.textContent = `[${dataFormatada}] Tarefa "${tarefa.texto}": ${evento.acao}`;
+      listaHistorico.appendChild(li);
+    });
+  });
 }
 
 // Função para iniciar o Pomodoro
@@ -680,6 +846,7 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("limparTudo").addEventListener("click", limparTudo);
   document.getElementById("alternarTema").addEventListener("click", alternarTema);
   document.getElementById("filtroCategoria").addEventListener("change", filtrarTarefas);
+  document.getElementById("filtroStatus").addEventListener("change", filtrarTarefas);
   document.getElementById("ordenarTarefas").addEventListener("change", ordenarTarefas);
   document.getElementById("modoLista").addEventListener("click", () => alternarModoVisualizacao("lista"));
   document.getElementById("modoKanban").addEventListener("click", () => alternarModoVisualizacao("kanban"));

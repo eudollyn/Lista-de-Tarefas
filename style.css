@@ -3,7 +3,7 @@
   --card: #2a2a2a;
   --text: #ffffff;
   --primary: #ff6347;
-  --primary-hover: #e55b41; /* Adicionado */
+  --primary-hover: #e55b41;
   --secondary: #333333;
   --shadow: rgba(0, 0, 0, 0.3);
 }
@@ -532,4 +532,45 @@ li.feito .prazo.vencida {
 .pomodoro.pausado #tempo {
   color: #888; /* Cor cinza para indicar pausa */
   opacity: 0.7;
+}
+
+/* Adicionado: Estilos para tarefas vencidas e próximas de vencer */
+.tarefa-vencida {
+  background-color: rgba(255, 99, 71, 0.2); /* Tom de vermelho claro */
+  border-left: 4px solid tomato;
+}
+
+.tarefa-vence-em-breve {
+  background-color: rgba(255, 165, 0, 0.2); /* Tom de laranja claro */
+  border-left: 4px solid orange;
+}
+
+/* Adicionado: Estilo para prioridade */
+.prioridade {
+  margin-left: 10px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Adicionado: Estilos para o histórico */
+.historico {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: var(--card);
+  border-radius: 5px;
+}
+
+.historico h2 {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+#listaHistorico {
+  list-style: none;
+  padding: 0;
+}
+
+#listaHistorico li {
+  padding: 5px 0;
+  border-bottom: 1px solid #ddd;
 }

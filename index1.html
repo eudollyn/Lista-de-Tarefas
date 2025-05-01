@@ -36,10 +36,12 @@
       });
     }
   }, 3000);
-</script>  
-<!-- Firebase -->
+  </script>  
+  <!-- Firebase (comentado para evitar erros) -->
+  <!--
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+  -->
   <!-- FullCalendar -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
@@ -61,22 +63,29 @@
         <label for="entradaMinutos">Tempo (min):</label>
         <input type="number" id="entradaMinutos" min="1" max="90" value="25" />
       </div>
-     <div id="tempo" role="timer" aria-live="polite">25:00</div>
-     <button id="iniciarPomodoro" aria-label="Iniciar temporizador Pomodoro">Iniciar</button>
-     <button id="pausarPomodoro" aria-label="Pausar temporizador Pomodoro">Pausar</button>
-     <button id="resetarPomodoro" aria-label="Resetar temporizador Pomodoro">Resetar</button>
-     <button id="pararAlarme" style="display: none;" aria-label="Parar alarme do Pomodoro">Parar Alarme</button>
+      <div id="tempo" role="timer" aria-live="polite">25:00</div>
+      <button id="iniciarPomodoro" aria-label="Iniciar temporizador Pomodoro">Iniciar</button>
+      <button id="pausarPomodoro" aria-label="Pausar temporizador Pomodoro">Pausar</button>
+      <button id="resetarPomodoro" aria-label="Resetar temporizador Pomodoro">Resetar</button>
+      <button id="pararAlarme" style="display: none;" aria-label="Parar alarme do Pomodoro">Parar Alarme</button>
     </section>
- 	
+    
     <section class="input-tarefa" aria-label="Adicionar nova tarefa">
       <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." aria-label="Nova tarefa" />
       <select id="categoria" aria-label="Categoria da tarefa">
+        <option value="" disabled selected>Categoria: Pessoal, Trabalho, Estudos, Outros</option>
         <option value="Pessoal">Pessoal</option>
         <option value="Trabalho">Trabalho</option>
         <option value="Estudos">Estudos</option>
         <option value="Outros">Outros</option>
       </select>
-      <input type="date" id="prazoTarefa" aria-label="Prazo da tarefa" />
+      <select id="prioridadeTarefa" aria-label="Prioridade da tarefa">
+        <option value="" disabled selected>Prioridade: Baixa, Média, Alta</option>
+        <option value="baixa">Baixa</option>
+        <option value="média">Média</option>
+        <option value="alta">Alta</option>
+      </select>
+      <input type="date" id="prazoTarefa" placeholder="Prazo: dd/mm/aaaa" aria-label="Prazo da tarefa" />
       <label for="tarefaRecorrente" class="label-recorrente">
         Recorrente?
         <button id="ajudaRecorrente" class="btn-ajuda" title="O que é uma tarefa recorrente?">?</button>
@@ -107,10 +116,19 @@
         <option value="Estudos">Estudos</option>
         <option value="Outros">Outros</option>
       </select>
+      <!-- Adicionado: Filtro de status -->
+      <label for="filtroStatus">Filtrar por status:</label>
+      <select id="filtroStatus">
+        <option value="todas">Todas</option>
+        <option value="pendentes">Pendentes</option>
+        <option value="concluídas">Concluídas</option>
+      </select>
       <label for="ordenarTarefas">Ordenar por:</label>
       <select id="ordenarTarefas">
         <option value="padrao">Padrão</option>
         <option value="prazo">Prazo (Mais Próximo)</option>
+        <!-- Adicionado: Ordenar por prioridade -->
+        <option value="prioridade">Prioridade</option>
       </select>
     </section>
 
@@ -138,6 +156,12 @@
     </section>
 
     <canvas id="graficoTarefas" aria-label="Gráfico de tarefas concluídas por categoria"></canvas>
+
+    <!-- Adicionado: Seção de histórico -->
+    <section class="historico">
+      <h2>Histórico de Alterações</h2>
+      <ul id="listaHistorico"></ul>
+    </section>
   </div>
 
   <!-- Toast -->
