@@ -4,7 +4,8 @@ let modoVisualizacao = "lista";
 let draggedItem = null;
 let calendar = null;
 let pomodoroInterval;
-let tempoRestante = 1500; // 25 minutos em segundos
+let tempoInicio = null; // Novo: armazena o timestamp de início
+let duracaoTotal = 1500; // 25 minutos - Novo: duração total do Pomodoro em segundos
 let pausado = true;
 
 // Função para tocar som com fallback
@@ -536,28 +537,57 @@ function ordenarTarefas() {
 
 // Função para iniciar o Pomodoro
 function iniciarPomodoro() {
-  if (!pausado) return;
+  if (!pausado) return; // Impede iniciar se já está rodando
   pausado = false;
-  const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
-  tempoRestante = minutos * 60;
+  document.querySelector(".pomodoro").classList.remove("pausado"); // Feedback visual
+
+  // Se tempoInicio é null, é um novo Pomodoro; caso contrário, retoma o existente
+  if (tempoInicio === null) {
+    const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
+    duracaoTotal = minutos * 60; // Define nova duração apenas para Pomodoro novo
+    tempoInicio = Date.now();
+  } else {
+    tempoInicio = Date.now() - (duracaoTotal - Math.floor(duracaoTotal)); // Ajusta o início para manter o tempo restante
+  }
+document.getElementById("entradaMinutos").addEventListener("change", () => {
+  if (pausado && tempoInicio === null) {
+    const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
+    duracaoTotal = minutos * 60;
+    atualizarTempo();
+  }
+});
+
   atualizarTempo();
   pomodoroInterval = setInterval(() => {
-    if (tempoRestante <= 0) {
-      clearInterval(pomodoroInterval);
-      pausado = true;
-      document.getElementById("pararAlarme").style.display = "block";
-      document.getElementById("pomodoroAlarm").play();
-      return;
+    if (!pausado) {
+      const tempoDecorrido = Math.floor((Date.now() - tempoInicio) / 1000);
+      const tempoRestante = duracaoTotal - tempoDecorrido;
+      if (tempoRestante <= 0) {
+        clearInterval(pomodoroInterval);
+        pausado = true;
+        document.getElementById("pararAlarme").style.display = "block";
+        document.getElementById("pomodoroAlarm").play().catch(error => {
+          console.error("Erro ao tocar alarme:", error);
+        });
+        document.querySelector(".pomodoro").classList.add("pausado"); // Feedback visual
+        atualizarTempo();
+        return;
+      }
+      atualizarTempo();
     }
-    tempoRestante--;
-    atualizarTempo();
   }, 1000);
 }
 
 // Função para pausar o Pomodoro
 function pausarPomodoro() {
-  clearInterval(pomodoroInterval);
-  pausado = true;
+  if (!pausado) {
+    pausado = true;
+    clearInterval(pomodoroInterval);
+    const tempoDecorrido = Math.floor((Date.now() - tempoInicio) / 1000);
+    duracaoTotal = duracaoTotal - tempoDecorrido; // Atualiza com o tempo restante
+    document.querySelector(".pomodoro").classList.add("pausado"); // Feedback visual
+    atualizarTempo();
+  }
 }
 
 // Função para resetar o Pomodoro
@@ -565,7 +595,9 @@ function resetarPomodoro() {
   clearInterval(pomodoroInterval);
   pausado = true;
   const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
-  tempoRestante = minutos * 60;
+  duracaoTotal = minutos * 60; // Redefine a duração total
+  tempoInicio = null; // Reseta o timestamp
+  document.querySelector(".pomodoro").classList.add("pausado"); // Feedback visual
   atualizarTempo();
   document.getElementById("pararAlarme").style.display = "none";
   document.getElementById("pomodoroAlarm").pause();
@@ -581,8 +613,17 @@ function pararAlarme() {
 
 // Função para atualizar o tempo do Pomodoro
 function atualizarTempo() {
-  const minutos = Math.floor(tempoRestante / 60);
-  const segundos = tempoRestante % 60;
+  let minutos = 0;
+  let segundos = 0;
+  if (!pausado && tempoInicio !== null) {
+    const tempoDecorrido = Math.floor((Date.now() - tempoInicio) / 1000);
+    const tempoRestante = Math.max(0, duracaoTotal - tempoDecorrido);
+    minutos = Math.floor(tempoRestante / 60);
+    segundos = tempoRestante % 60;
+  } else {
+    minutos = Math.floor(duracaoTotal / 60);
+    segundos = duracaoTotal % 60;
+  }
   document.getElementById("tempo").textContent = `${minutos.toString().padStart(2, "0")}:${segundos.toString().padStart(2, "0")}`;
 }
 
@@ -635,6 +676,11 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log("Botão Calendário clicado");
     alternarModoVisualizacao("calendario");
   });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && !pausado && tempoInicio !== null) {
+    atualizarTempo(); // Atualiza imediatamente ao voltar à aba
+  }
+});
 
   // Verificar se os elementos de áudio estão carregados
   const somAdicionar = document.getElementById("somAdicionar");

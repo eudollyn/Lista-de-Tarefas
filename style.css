@@ -520,3 +520,8 @@ li.feito .prazo.vencida {
 .fc .fc-daygrid-event:hover {
   background-color: var(--primary-hover);
 }
+
+.pomodoro.pausado #tempo {
+  color: #888; /* Cor cinza para indicar pausa */
+  opacity: 0.7;
+}

@@ -38,13 +38,13 @@
         <label for="entradaMinutos">Tempo (min):</label>
         <input type="number" id="entradaMinutos" min="1" max="90" value="25" />
       </div>
-      <div id="tempo">25:00</div>
-      <button id="iniciarPomodoro">Iniciar</button>
-      <button id="pausarPomodoro">Pausar</button>
-      <button id="resetarPomodoro">Resetar</button>
-      <button id="pararAlarme" style="display: none;">Parar Alarme</button>
+     <div id="tempo" role="timer" aria-live="polite">25:00</div>
+     <button id="iniciarPomodoro" aria-label="Iniciar temporizador Pomodoro">Iniciar</button>
+     <button id="pausarPomodoro" aria-label="Pausar temporizador Pomodoro">Pausar</button>
+     <button id="resetarPomodoro" aria-label="Resetar temporizador Pomodoro">Resetar</button>
+     <button id="pararAlarme" style="display: none;" aria-label="Parar alarme do Pomodoro">Parar Alarme</button>
     </section>
-
+ 	
     <section class="input-tarefa" aria-label="Adicionar nova tarefa">
       <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." aria-label="Nova tarefa" />
       <select id="categoria" aria-label="Categoria da tarefa">
