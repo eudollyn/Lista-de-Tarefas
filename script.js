@@ -4,8 +4,8 @@ let modoVisualizacao = "lista";
 let draggedItem = null;
 let calendar = null;
 let pomodoroInterval;
-let tempoInicio = null; // Novo: armazena o timestamp de início
-let duracaoTotal = 1500; // 25 minutos - Novo: duração total do Pomodoro em segundos
+let tempoInicio = null;
+let duracaoTotal = 1500; // 25 minutos em segundos
 let pausado = true;
 
 // Função para tocar som com fallback
@@ -52,7 +52,6 @@ function carregarTarefas() {
 // Função para alternar entre modos de visualização
 function alternarModoVisualizacao(modo) {
   console.log(`Alternando para o modo: ${modo}`);
-
   const modoListaBtn = document.getElementById("modoLista");
   const modoKanbanBtn = document.getElementById("modoKanban");
   const modoCalendarioBtn = document.getElementById("modoCalendario");
@@ -115,7 +114,6 @@ function carregarTarefasKanban() {
     emProgresso.innerHTML = "";
     concluido.innerHTML = "";
 
-    tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
     tarefas.forEach((tarefa, index) => {
       const li = document.createElement("li");
       li.className = "animada";
@@ -166,24 +164,18 @@ function allowDrop(event) {
 function drop(event) {
   event.preventDefault();
   const targetColumn = event.target.closest(".kanban-column").id;
-  const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   const index = draggedItem.dataset.index;
 
-  if (targetColumn === "aFazer") {
-    tarefas[index].emProgresso = false;
-    tarefas[index].feito = false;
-  } else if (targetColumn === "emProgresso") {
-    tarefas[index].emProgresso = true;
-    tarefas[index].feito = false;
-  } else if (targetColumn === "concluido") {
-    tarefas[index].emProgresso = false;
-    tarefas[index].feito = true;
+  tarefas[index].emProgresso = targetColumn === "emProgresso";
+  tarefas[index].feito = targetColumn === "concluido";
+
+  if (tarefas[index].feito) {
     draggedItem.classList.add("feito");
     draggedItem.querySelector("span").classList.add("concluida");
-    const somAdicionar = document.getElementById("somAdicionar");
-    somAdicionar.play().catch(error => {
-      console.error("Erro ao tocar somAdicionar no drop:", error);
-    });
+    tocarSom("somAdicionar");
+  } else {
+    draggedItem.classList.remove("feito");
+    draggedItem.querySelector("span").classList.remove("concluida");
   }
 
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
@@ -207,7 +199,14 @@ function carregarTarefasCalendario() {
 
     calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: "dayGridMonth",
-      events: [],
+      events: tarefas
+        .filter(tarefa => tarefa.prazo)
+        .map(tarefa => ({
+          title: tarefa.texto,
+          start: tarefa.prazo,
+          allDay: true,
+          backgroundColor: tarefa.feito ? "#4CAF50" : "#FF9900",
+        })),
       eventClick: function(info) {
         alert(`Tarefa: ${info.event.title}\nPrazo: ${info.event.start.toISOString().split("T")[0]}`);
       },
@@ -216,18 +215,6 @@ function carregarTarefasCalendario() {
         center: "title",
         right: "dayGridMonth,dayGridWeek",
       },
-    });
-
-    const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
-    tarefas.forEach(tarefa => {
-      if (tarefa.prazo) {
-        calendar.addEvent({
-          title: tarefa.texto,
-          start: tarefa.prazo,
-          allDay: true,
-          backgroundColor: tarefa.feito ? "#4CAF50" : "#FF9900",
-        });
-      }
     });
 
     calendar.render();
@@ -249,12 +236,8 @@ function adicionarTarefa() {
     return;
   }
 
-  const somAdicionar = document.getElementById("somAdicionar");
-  somAdicionar.play().catch(error => {
-    console.error("Erro ao tocar somAdicionar:", error);
-  });
+  tocarSom("somAdicionar");
 
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   tarefas.push({ texto, categoria, prazo, feito: false, recorrente, emProgresso: false });
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
 
@@ -272,15 +255,11 @@ function adicionarTarefa() {
 function concluirTarefa(btn) {
   const li = btn.parentElement;
   const index = li.dataset.index;
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   tarefas[index].feito = !tarefas[index].feito;
   tarefas[index].emProgresso = false;
 
   if (tarefas[index].feito) {
-    const somAdicionar = document.getElementById("somAdicionar");
-    somAdicionar.play().catch(error => {
-      console.error("Erro ao tocar somAdicionar ao concluir:", error);
-    });
+    tocarSom("somAdicionar");
   }
 
   if (tarefas[index].feito && tarefas[index].recorrente) {
@@ -307,12 +286,8 @@ function removerTarefa(btn) {
   const li = btn.parentElement;
   const index = li.dataset.index;
 
-  const somRemover = document.getElementById("somRemover");
-  somRemover.play().catch(error => {
-    console.error("Erro ao tocar somRemover:", error);
-  });
+  tocarSom("somRemover");
 
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   tarefas.splice(index, 1);
   localStorage.setItem("tarefas", JSON.stringify(tarefas));
   carregarTarefas();
@@ -328,7 +303,6 @@ function reagendarTarefa(btn) {
   const index = li.dataset.index;
   const novoPrazo = prompt("Digite o novo prazo (formato: AAAA-MM-DD):");
   if (novoPrazo) {
-    tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
     tarefas[index].prazo = novoPrazo;
     localStorage.setItem("tarefas", JSON.stringify(tarefas));
     carregarTarefas();
@@ -342,7 +316,6 @@ function reagendarTarefa(btn) {
 function editarTarefa(btn) {
   const li = btn.parentElement;
   const index = li.dataset.index;
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   const tarefa = tarefas[index];
 
   const novoTexto = prompt("Editar tarefa:", tarefa.texto);
@@ -390,7 +363,6 @@ function solicitarPermissaoNotificacoes() {
 // Função para verificar prazos
 function verificarPrazos() {
   const hoje = new Date().toISOString().split("T")[0];
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   tarefas.forEach(tarefa => {
     if (tarefa.prazo && tarefa.prazo === hoje && !tarefa.feito) {
       if (Notification.permission === "granted") {
@@ -403,7 +375,6 @@ function verificarPrazos() {
 // Função para atualizar o gráfico
 function atualizarGrafico() {
   const ctx = document.getElementById("graficoTarefas").getContext("2d");
-  const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   const categorias = ["Pessoal", "Trabalho", "Estudos", "Outros"];
   const concluidasPorCategoria = categorias.map(categoria =>
     tarefas.filter(t => t.categoria === categoria && t.feito).length
@@ -457,7 +428,6 @@ function carregarTema() {
 
 // Função para exportar como TXT
 function exportarTXT() {
-  const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   const texto = tarefas.map(t => `${t.texto} [${t.categoria}] ${t.prazo ? `⏰ ${t.prazo}` : ''} ${t.feito ? '✔️' : ''}`).join("\n");
   const blob = new Blob([texto], { type: "text/plain" });
   const url = URL.createObjectURL(blob);
@@ -473,13 +443,71 @@ function exportarPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   doc.text("Minha Lista de Tarefas", 10, 10);
-  const tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   let y = 20;
   tarefas.forEach(t => {
     doc.text(`${t.texto} [${t.categoria}] ${t.prazo ? `⏰ ${t.prazo}` : ''} ${t.feito ? '✔️' : ''}`, 10, y);
     y += 10;
   });
   doc.save("tarefas.pdf");
+}
+
+// Função para exportar como Excel
+function exportarExcel() {
+  console.log("Iniciando exportação para Excel...");
+  if (!tarefas || tarefas.length === 0) {
+    mostrarToast("Nenhuma tarefa para exportar!");
+    console.log("Nenhuma tarefa disponível.");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    mostrarToast("⚠️ Biblioteca SheetJS não carregada!");
+    console.error("SheetJS não está disponível. Verifique o carregamento do script.");
+    return;
+  }
+
+  try {
+    console.log("Formatando dados para Excel...");
+    const dadosExcel = tarefas
+      .filter(tarefa => tarefa && typeof tarefa === "object")
+      .map(tarefa => ({
+        Tarefa: tarefa.texto || "Sem descrição",
+        Categoria: tarefa.categoria || "Sem categoria",
+        Prazo: tarefa.prazo || "Sem prazo",
+        Status: tarefa.feito ? "Concluída" : "Pendente",
+        Recorrente: tarefa.recorrente ? "Sim" : "Não"
+      }));
+
+    if (dadosExcel.length === 0) {
+      mostrarToast("⚠️ Nenhuma tarefa válida para exportar!");
+      console.log("Nenhuma tarefa válida após filtragem.");
+      return;
+    }
+
+    console.log("Dados formatados:", dadosExcel);
+    const worksheet = XLSX.utils.json_to_sheet(dadosExcel);
+    console.log("Planilha criada:", worksheet);
+
+    worksheet['!cols'] = [
+      { wch: 30 }, // Tarefa
+      { wch: 15 }, // Categoria
+      { wch: 15 }, // Prazo
+      { wch: 10 }, // Status
+      { wch: 10 }  // Recorrente
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tarefas");
+    console.log("Workbook criado:", workbook);
+
+    // Substituir XLSX.write por XLSX.writeFile
+    XLSX.writeFile(workbook, "Lista_de_Tarefas.xlsx");
+    console.log("Download iniciado.");
+    mostrarToast("✅ Tarefas exportadas para Excel!");
+  } catch (error) {
+    console.error("Erro ao exportar para Excel:", error);
+    mostrarToast("⚠️ Erro ao exportar para Excel: " + error.message);
+  }
 }
 
 // Função para limpar tudo
@@ -499,7 +527,6 @@ function filtrarTarefas() {
   const filtro = document.getElementById("filtroCategoria").value;
   const lista = document.getElementById("listaTarefas");
   lista.innerHTML = "";
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   const tarefasFiltradas = filtro === "todas" ? tarefas : tarefas.filter(t => t.categoria === filtro);
   tarefasFiltradas.forEach(({ texto, categoria, prazo, feito }, index) => {
     const li = document.createElement("li");
@@ -521,7 +548,6 @@ function filtrarTarefas() {
 // Função para ordenar tarefas
 function ordenarTarefas() {
   const ordenacao = document.getElementById("ordenarTarefas").value;
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
   if (ordenacao === "prazo") {
     tarefas.sort((a, b) => {
       if (!a.prazo && !b.prazo) return 0;
@@ -537,25 +563,17 @@ function ordenarTarefas() {
 
 // Função para iniciar o Pomodoro
 function iniciarPomodoro() {
-  if (!pausado) return; // Impede iniciar se já está rodando
+  if (!pausado) return;
   pausado = false;
-  document.querySelector(".pomodoro").classList.remove("pausado"); // Feedback visual
+  document.querySelector(".pomodoro").classList.remove("pausado");
 
-  // Se tempoInicio é null, é um novo Pomodoro; caso contrário, retoma o existente
   if (tempoInicio === null) {
     const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
-    duracaoTotal = minutos * 60; // Define nova duração apenas para Pomodoro novo
+    duracaoTotal = minutos * 60;
     tempoInicio = Date.now();
   } else {
-    tempoInicio = Date.now() - (duracaoTotal - Math.floor(duracaoTotal)); // Ajusta o início para manter o tempo restante
+    tempoInicio = Date.now() - (duracaoTotal - Math.floor(duracaoTotal));
   }
-document.getElementById("entradaMinutos").addEventListener("change", () => {
-  if (pausado && tempoInicio === null) {
-    const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
-    duracaoTotal = minutos * 60;
-    atualizarTempo();
-  }
-});
 
   atualizarTempo();
   pomodoroInterval = setInterval(() => {
@@ -569,7 +587,7 @@ document.getElementById("entradaMinutos").addEventListener("change", () => {
         document.getElementById("pomodoroAlarm").play().catch(error => {
           console.error("Erro ao tocar alarme:", error);
         });
-        document.querySelector(".pomodoro").classList.add("pausado"); // Feedback visual
+        document.querySelector(".pomodoro").classList.add("pausado");
         atualizarTempo();
         return;
       }
@@ -584,8 +602,8 @@ function pausarPomodoro() {
     pausado = true;
     clearInterval(pomodoroInterval);
     const tempoDecorrido = Math.floor((Date.now() - tempoInicio) / 1000);
-    duracaoTotal = duracaoTotal - tempoDecorrido; // Atualiza com o tempo restante
-    document.querySelector(".pomodoro").classList.add("pausado"); // Feedback visual
+    duracaoTotal = duracaoTotal - tempoDecorrido;
+    document.querySelector(".pomodoro").classList.add("pausado");
     atualizarTempo();
   }
 }
@@ -595,9 +613,9 @@ function resetarPomodoro() {
   clearInterval(pomodoroInterval);
   pausado = true;
   const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
-  duracaoTotal = minutos * 60; // Redefine a duração total
-  tempoInicio = null; // Reseta o timestamp
-  document.querySelector(".pomodoro").classList.add("pausado"); // Feedback visual
+  duracaoTotal = minutos * 60;
+  tempoInicio = null;
+  document.querySelector(".pomodoro").classList.add("pausado");
   atualizarTempo();
   document.getElementById("pararAlarme").style.display = "none";
   document.getElementById("pomodoroAlarm").pause();
@@ -634,60 +652,55 @@ function mostrarAjudaRecorrente() {
 
 // Inicialização
 document.addEventListener("DOMContentLoaded", function() {
+  console.log("Inicializando aplicação...");
   carregarTarefas();
   solicitarPermissaoNotificacoes();
   mostrarToast("🎉 Bem-vindo à sua lista de tarefas!");
-
   carregarTema();
   verificarPrazos();
   setInterval(verificarPrazos, 60000);
 
+  // Ouvintes de eventos
   document.getElementById("adicionarTarefa").addEventListener("click", adicionarTarefa);
   document.getElementById("iniciarPomodoro").addEventListener("click", iniciarPomodoro);
   document.getElementById("pausarPomodoro").addEventListener("click", pausarPomodoro);
   document.getElementById("resetarPomodoro").addEventListener("click", resetarPomodoro);
-  document.getElementById("alternarTema").addEventListener("click", alternarTema);
   document.getElementById("pararAlarme").addEventListener("click", pararAlarme);
   document.getElementById("exportarTXT").addEventListener("click", exportarTXT);
   document.getElementById("exportarPDF").addEventListener("click", exportarPDF);
+  document.getElementById("exportarExcel").addEventListener("click", exportarExcel);
   document.getElementById("limparTudo").addEventListener("click", limparTudo);
+  document.getElementById("alternarTema").addEventListener("click", alternarTema);
   document.getElementById("filtroCategoria").addEventListener("change", filtrarTarefas);
   document.getElementById("ordenarTarefas").addEventListener("change", ordenarTarefas);
-  
-  const ajudaRecorrenteBtn = document.getElementById("ajudaRecorrente");
-  if (ajudaRecorrenteBtn) {
-    ajudaRecorrenteBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      mostrarAjudaRecorrente();
-    });
-  } else {
-    console.error("Botão ajudaRecorrente não encontrado!");
-  }
+  document.getElementById("modoLista").addEventListener("click", () => alternarModoVisualizacao("lista"));
+  document.getElementById("modoKanban").addEventListener("click", () => alternarModoVisualizacao("kanban"));
+  document.getElementById("modoCalendario").addEventListener("click", () => alternarModoVisualizacao("calendario"));
+  document.getElementById("ajudaRecorrente").addEventListener("click", (event) => {
+    event.stopPropagation();
+    mostrarAjudaRecorrente();
+  });
 
-  document.getElementById("modoLista").addEventListener("click", () => {
-    console.log("Botão Lista clicado");
-    alternarModoVisualizacao("lista");
+  // Atualizar duração do Pomodoro quando entradaMinutos mudar
+  document.getElementById("entradaMinutos").addEventListener("change", () => {
+    if (pausado && tempoInicio === null) {
+      const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
+      duracaoTotal = minutos * 60;
+      atualizarTempo();
+    }
   });
-  document.getElementById("modoKanban").addEventListener("click", () => {
-    console.log("Botão Kanban clicado");
-    alternarModoVisualizacao("kanban");
-  });
-  document.getElementById("modoCalendario").addEventListener("click", () => {
-    console.log("Botão Calendário clicado");
-    alternarModoVisualizacao("calendario");
-  });
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && !pausado && tempoInicio !== null) {
-    atualizarTempo(); // Atualiza imediatamente ao voltar à aba
-  }
-});
 
-  // Verificar se os elementos de áudio estão carregados
-  const somAdicionar = document.getElementById("somAdicionar");
-  const somRemover = document.getElementById("somRemover");
-  console.log("somAdicionar carregado:", somAdicionar.readyState === 4 ? "Sim" : "Não");
-  console.log("somRemover carregado:", somRemover.readyState === 4 ? "Sim" : "Não");
+  // Atualizar tempo ao voltar para a aba
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !pausado && tempoInicio !== null) {
+      atualizarTempo();
+    }
+  });
+
+  // Verificar áudios
+  console.log("somAdicionar carregado:", document.getElementById("somAdicionar").readyState === 4 ? "Sim" : "Não");
+  console.log("somRemover carregado:", document.getElementById("somRemover").readyState === 4 ? "Sim" : "Não");
 
   atualizarGrafico();
-  console.log("DOMContentLoaded executado com sucesso!");
+  console.log("Inicialização concluída!");
 });

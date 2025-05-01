@@ -211,6 +211,14 @@ ul#listaTarefas li button {
   background-color: #555;
 }
 
+.botoes-extras #exportarExcel {
+  background-color: var(--primary);
+}
+
+.botoes-extras #exportarExcel:hover {
+  background-color: var(--primary-hover);
+}
+
 /* Pomodoro */
 .pomodoro {
   background: #1f1f1f;

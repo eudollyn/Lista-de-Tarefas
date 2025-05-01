@@ -14,6 +14,29 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Script com fallback para SheetJS -->
+  <script>
+    function loadScript(url, callback) {
+      const script = document.createElement("script");
+      script.src = url;
+      script.onload = callback;
+      script.onerror = () => console.error(`Falha ao carregar o script: ${url}`);
+      document.head.appendChild(script);
+    }
+
+    loadScript("https://cdn.sheetjs.com/xlsx-0.21.0/package/dist/xlsx.full.min.js", () => {
+      console.log("SheetJS carregado com sucesso!");
+    });
+
+    setTimeout(() => {
+      if (typeof XLSX === "undefined") {
+        console.warn("SheetJS não carregado pelo CDN principal. Tentando fallback...");
+        loadScript("https://unpkg.com/xlsx@0.21.0/dist/xlsx.full.min.js", () => {
+          console.log("SheetJS carregado pelo fallback!");
+        });
+      }
+    }, 3000);
+  </script>
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
@@ -65,6 +88,7 @@
     <section class="botoes-extras" aria-label="Ações extras">
       <button id="exportarTXT">Exportar TXT</button>
       <button id="exportarPDF">Exportar PDF</button>
+      <button id="exportarExcel" aria-label="Exportar lista de tarefas para Excel">Exportar Excel</button>
       <button id="limparTudo">Limpar Tudo</button>
       <button id="alternarTema">Alternar Tema</button>
     </section>
