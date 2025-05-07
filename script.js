@@ -1,5 +1,9 @@
+// Inicializar Firebase (já configurado no index.html)
+const auth = firebase.auth();
+const database = firebase.database();
+
 // Variáveis globais
-let tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
+let tarefas = [];
 let modoVisualizacao = "lista";
 let draggedItem = null;
 let calendar = null;
@@ -25,62 +29,82 @@ function tocarSom(somId) {
   }
 }
 
-// Função para carregar tarefas no modo Lista
+// Função para carregar tarefas do Firebase no modo Lista
 function carregarTarefas() {
-  const lista = document.getElementById("listaTarefas");
-  lista.innerHTML = "";
-  tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
-  const agora = new Date();
-
-  const filtroCategoria = document.getElementById("filtroCategoria").value;
-  const filtroStatus = document.getElementById("filtroStatus").value;
-  const ordenarPor = document.getElementById("ordenarTarefas").value;
-
-  let tarefasFiltradas = tarefas.filter(tarefa => {
-    const categoriaMatch = filtroCategoria === "todas" || tarefa.categoria === filtroCategoria;
-    const statusMatch = filtroStatus === "todas" || (filtroStatus === "pendentes" && !tarefa.feito) || (filtroStatus === "concluídas" && tarefa.feito);
-    return categoriaMatch && statusMatch;
-  });
-
-  if (ordenarPor === "prazo") {
-    tarefasFiltradas.sort((a, b) => new Date(a.prazo || "9999-12-31") - new Date(b.prazo || "9999-12-31"));
-  } else if (ordenarPor === "prioridade") {
-    const prioridadeOrdem = { alta: 1, média: 2, baixa: 3 };
-    tarefasFiltradas.sort((a, b) => prioridadeOrdem[a.prioridade] - prioridadeOrdem[b.prioridade]);
+  const user = auth.currentUser;
+  if (!user) {
+    document.getElementById("listaTarefas").innerHTML = "";
+    atualizarContador();
+    return;
   }
 
-  tarefasFiltradas.forEach(({ texto, categoria, prazo, feito, recorrente, prioridade, tags }, index) => {
-    const li = document.createElement("li");
-    li.className = "animada";
-    li.dataset.index = index;
-    if (feito) li.classList.add("feito");
+  const tasksRef = database.ref(`tasks/${user.uid}`);
+  tasksRef.on('value', snapshot => {
+    tarefas = [];
+    const data = snapshot.val() || {};
+    Object.entries(data).forEach(([id, tarefa]) => {
+      tarefas.push({ id, ...tarefa });
+    });
 
-    if (prazo && !feito) {
-      const prazoDate = new Date(prazo);
-      const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
-      if (diffDias < 0) {
-        li.classList.add("tarefa-vencida");
-      } else if (diffDias <= 1) {
-        li.classList.add("tarefa-vence-em-breve");
-      }
+    const lista = document.getElementById("listaTarefas");
+    lista.innerHTML = "";
+    const agora = new Date();
+
+    const filtroCategoria = document.getElementById("filtroCategoria").value;
+    const filtroStatus = document.getElementById("filtroStatus").value;
+    const ordenarPor = document.getElementById("ordenarTarefas").value;
+
+    let tarefasFiltradas = tarefas.filter(tarefa => {
+      const categoriaMatch = filtroCategoria === "todas" || tarefa.categoria === filtroCategoria;
+      const statusMatch = filtroStatus === "todas" || (filtroStatus === "pendentes" && !tarefa.feito) || (filtroStatus === "concluídas" && tarefa.feito);
+      return categoriaMatch && statusMatch;
+    });
+
+    if (ordenarPor === "prazo") {
+      tarefasFiltradas.sort((a, b) => new Date(a.prazo || "9999-12-31") - new Date(b.prazo || "9999-12-31"));
+    } else if (ordenarPor === "prioridade") {
+      const prioridadeOrdem = { alta: 1, média: 2, baixa: 3 };
+      tarefasFiltradas.sort((a, b) => prioridadeOrdem[a.prioridade] - prioridadeOrdem[b.prioridade]);
     }
 
-    const dataPrazo = prazo ? `<small class="prazo">⏰ ${prazo}</small>` : "";
-    const dataPrioridade = prioridade ? `<small class="prioridade">Prioridade: ${prioridade}</small>` : "";
-    const dataTags = tags && tags.length ? `<small class="tags">Tags: ${tags.join(", ")}</small>` : "";
-    li.innerHTML = `
-      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo} ${dataPrioridade} ${dataTags}</span>
-      <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
-      <button onclick="editarTarefa(this)">✏️</button>
-      <button onclick="removerTarefa(this)">🗑️</button>
-      <button onclick="reagendarTarefa(this)">📅</button>
-    `;
-    lista.appendChild(li);
+    tarefasFiltradas.forEach(({ id, texto, categoria, prazo, feito, recorrente, prioridade, tags }, index) => {
+      const li = document.createElement("li");
+      li.className = "animada";
+      li.dataset.id = id;
+      if (feito) li.classList.add("feito");
+
+      if (prazo && !feito) {
+        const prazoDate = new Date(prazo);
+        const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
+        if (diffDias < 0) {
+          li.classList.add("tarefa-vencida");
+        } else if (diffDias <= 1) {
+          li.classList.add("tarefa-vence-em-breve");
+        }
+      }
+
+      const dataPrazo = prazo ? `<small class="prazo">⏰ ${prazo}</small>` : "";
+      const dataPrioridade = prioridade ? `<small class="prioridade">Prioridade: ${prioridade}</small>` : "";
+      const dataTags = tags && tags.length ? `<small class="tags">Tags: ${tags.join(", ")}</small>` : "";
+      li.innerHTML = `
+        <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo} ${dataPrioridade} ${dataTags}</span>
+        <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
+        <button onclick="editarTarefa(this)">✏️</button>
+        <button onclick="removerTarefa(this)">🗑️</button>
+        <button onclick="reagendarTarefa(this)">📅</button>
+      `;
+      lista.appendChild(li);
+    });
+
+    atualizarContador();
+    atualizarHistorico();
+    if (modoVisualizacao === "kanban") carregarTarefasKanban();
+    if (modoVisualizacao === "calendario") carregarTarefasCalendario();
+    atualizarGrafico();
+  }, err => {
+    console.error("Erro ao carregar tarefas:", err);
+    mostrarToast("⚠️ Erro ao carregar tarefas!");
   });
-  atualizarContador();
-  atualizarHistorico();
-  if (modoVisualizacao === "kanban") carregarTarefasKanban();
-  if (modoVisualizacao === "calendario") carregarTarefasCalendario();
 }
 
 // Função para alternar entre modos de visualização
@@ -149,14 +173,13 @@ function carregarTarefasKanban() {
     concluido.innerHTML = "";
     const agora = new Date();
 
-    tarefas.forEach((tarefa, index) => {
+    tarefas.forEach((tarefa) => {
       const li = document.createElement("li");
       li.className = "animada";
       li.draggable = true;
-      li.dataset.index = index;
+      li.dataset.id = tarefa.id;
       if (tarefa.feito) li.classList.add("feito");
 
-      // Verificar prazo para destacar
       if (tarefa.prazo && !tarefa.feito) {
         const prazoDate = new Date(tarefa.prazo);
         const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
@@ -211,25 +234,32 @@ function allowDrop(event) {
 
 function drop(event) {
   event.preventDefault();
+  const user = auth.currentUser;
+  if (!user) return;
+
   const targetColumn = event.target.closest(".kanban-column").id;
-  const index = draggedItem.dataset.index;
+  const taskId = draggedItem.dataset.id;
 
-  tarefas[index].emProgresso = targetColumn === "emProgresso";
-  tarefas[index].feito = targetColumn === "concluido";
+  const updates = {
+    emProgresso: targetColumn === "emProgresso",
+    feito: targetColumn === "concluido"
+  };
 
-  if (tarefas[index].feito) {
-    draggedItem.classList.add("feito");
-    draggedItem.querySelector("span").classList.add("concluida");
-    tocarSom("somAdicionar");
-  } else {
-    draggedItem.classList.remove("feito");
-    draggedItem.querySelector("span").classList.remove("concluida");
-  }
-
-  localStorage.setItem("tarefas", JSON.stringify(tarefas));
-  carregarTarefasKanban();
-  atualizarContador();
-  atualizarGrafico();
+  database.ref(`tasks/${user.uid}/${taskId}`).update(updates)
+    .then(() => {
+      if (updates.feito) {
+        draggedItem.classList.add("feito");
+        draggedItem.querySelector("span").classList.add("concluida");
+        tocarSom("somAdicionar");
+      } else {
+        draggedItem.classList.remove("feito");
+        draggedItem.querySelector("span").classList.remove("concluida");
+      }
+    })
+    .catch(err => {
+      console.error("Erro ao atualizar tarefa:", err);
+      mostrarToast("⚠️ Erro ao mover tarefa!");
+    });
 }
 
 // Função para carregar tarefas no modo Calendário
@@ -273,6 +303,12 @@ function carregarTarefasCalendario() {
 
 // Função para adicionar tarefa
 function adicionarTarefa() {
+  const user = auth.currentUser;
+  if (!user) {
+    mostrarToast("⚠️ Faça login para adicionar tarefas!");
+    return;
+  }
+
   const inputTarefa = document.getElementById("novaTarefa");
   const categoria = document.getElementById("categoria").value;
   const prazo = document.getElementById("prazoTarefa").value;
@@ -282,21 +318,19 @@ function adicionarTarefa() {
   const texto = inputTarefa.value.trim();
 
   if (!texto) {
-    alert("⚠️ Por favor, insira uma descrição para a tarefa!");
+    mostrarToast("⚠️ Insira uma descrição para a tarefa!");
     return;
   }
 
   if (!categoria) {
-    alert("⚠️ Por favor, selecione uma categoria!");
+    mostrarToast("⚠️ Selecione uma categoria!");
     return;
   }
 
   if (!prioridade) {
-    alert("⚠️ Por favor, selecione uma prioridade!");
+    mostrarToast("⚠️ Selecione uma prioridade!");
     return;
   }
-
-  tocarSom("somAdicionar");
 
   const tags = tagsInput.split(",").map(tag => tag.trim()).filter(tag => tag);
   const novaTarefa = {
@@ -313,113 +347,134 @@ function adicionarTarefa() {
       data: new Date().toISOString()
     }]
   };
-  tarefas.push(novaTarefa);
-  localStorage.setItem("tarefas", JSON.stringify(tarefas));
 
-  inputTarefa.value = "";
-  document.getElementById("tagsTarefa").value = "";
-  document.getElementById("prazoTarefa").value = "";
-  document.getElementById("tarefaRecorrente").checked = false;
-
-  carregarTarefas();
-  atualizarContador();
-  atualizarGrafico();
-  tocarSom("somAdicionar");
-  mostrarToast("✅ Tarefa adicionada com sucesso!");
+  database.ref(`tasks/${user.uid}`).push(novaTarefa)
+    .then(() => {
+      tocarSom("somAdicionar");
+      mostrarToast("✅ Tarefa adicionada com sucesso!");
+      inputTarefa.value = "";
+      document.getElementById("tagsTarefa").value = "";
+      document.getElementById("prazoTarefa").value = "";
+      document.getElementById("tarefaRecorrente").checked = false;
+    })
+    .catch(err => {
+      console.error("Erro ao adicionar tarefa:", err);
+      mostrarToast("⚠️ Erro ao adicionar tarefa!");
+    });
 }
 
 // Função para concluir tarefa
 function concluirTarefa(btn) {
+  const user = auth.currentUser;
+  if (!user) return;
+
   const li = btn.parentElement;
-  const index = li.dataset.index;
-  tarefas[index].feito = !tarefas[index].feito;
-  tarefas[index].emProgresso = false;
+  const taskId = li.dataset.id;
+  const tarefa = tarefas.find(t => t.id === taskId);
 
-  tarefas[index].historico.push({
-    acao: tarefas[index].feito ? "Concluída" : "Marcada como pendente",
-    data: new Date().toISOString()
-  });
+  const updates = {
+    feito: !tarefa.feito,
+    emProgresso: false,
+    historico: [...tarefa.historico, {
+      acao: !tarefa.feito ? "Concluída" : "Marcada como pendente",
+      data: new Date().toISOString()
+    }]
+  };
 
-  if (tarefas[index].feito) {
-    tocarSom("somAdicionar");
-  }
+  database.ref(`tasks/${user.uid}/${taskId}`).update(updates)
+    .then(() => {
+      if (updates.feito) {
+        tocarSom("somAdicionar");
+      }
 
-  if (tarefas[index].feito && tarefas[index].recorrente) {
-    const { texto, categoria, prazo, prioridade } = tarefas[index];
-    let novoPrazo = "";
-    if (prazo) {
-      const prazoDate = new Date(prazo);
-      prazoDate.setDate(prazoDate.getDate() + 1);
-      novoPrazo = prazoDate.toISOString().split("T")[0];
-    }
-    tarefas.push({
-      texto,
-      categoria,
-      prazo: novoPrazo,
-      feito: false,
-      recorrente: true,
-      emProgresso: false,
-      prioridade,
-      historico: [{
-        acao: "Criada (recorrente)",
-        data: new Date().toISOString()
-      }]
+      if (updates.feito && tarefa.recorrente) {
+        let novoPrazo = "";
+        if (tarefa.prazo) {
+          const prazoDate = new Date(tarefa.prazo);
+          prazoDate.setDate(prazoDate.getDate() + 1);
+          novoPrazo = prazoDate.toISOString().split("T")[0];
+        }
+        database.ref(`tasks/${user.uid}`).push({
+          texto: tarefa.texto,
+          categoria: tarefa.categoria,
+          prazo: novoPrazo,
+          feito: false,
+          recorrente: true,
+          emProgresso: false,
+          prioridade: tarefa.prioridade,
+          tags: tarefa.tags,
+          historico: [{
+            acao: "Criada (recorrente)",
+            data: new Date().toISOString()
+          }]
+        });
+      }
+    })
+    .catch(err => {
+      console.error("Erro ao concluir tarefa:", err);
+      mostrarToast("⚠️ Erro ao concluir tarefa!");
     });
-  }
-
-  localStorage.setItem("tarefas", JSON.stringify(tarefas));
-  carregarTarefas();
-  atualizarContador();
-  atualizarGrafico();
-  filtrarTarefas();
-  ordenarTarefas();
 }
 
 // Função para remover tarefa
 function removerTarefa(btn) {
+  const user = auth.currentUser;
+  if (!user) return;
+
   const li = btn.parentElement;
-  const index = li.dataset.index;
+  const taskId = li.dataset.id;
+  const tarefa = tarefas.find(t => t.id === taskId);
 
-  tarefas[index].historico.push({
-    acao: "Removida",
-    data: new Date().toISOString()
+  database.ref(`tasks/${user.uid}/${taskId}`).update({
+    historico: [...tarefa.historico, {
+      acao: "Removida",
+      data: new Date().toISOString()
+    }]
+  }).then(() => {
+    database.ref(`tasks/${user.uid}/${taskId}`).remove()
+      .then(() => {
+        tocarSom("somRemover");
+        mostrarToast("🗑️ Tarefa removida!");
+      })
+      .catch(err => {
+        console.error("Erro ao remover tarefa:", err);
+        mostrarToast("⚠️ Erro ao remover tarefa!");
+      });
   });
-
-  tocarSom("somRemover");
-
-  tarefas.splice(index, 1);
-  localStorage.setItem("tarefas", JSON.stringify(tarefas));
-  carregarTarefas();
-  atualizarContador();
-  atualizarGrafico();
-  filtrarTarefas();
-  ordenarTarefas();
 }
 
 // Função para reagendar tarefa
 function reagendarTarefa(btn) {
+  const user = auth.currentUser;
+  if (!user) return;
+
   const li = btn.parentElement;
-  const index = li.dataset.index;
+  const taskId = li.dataset.id;
+  const tarefa = tarefas.find(t => t.id === taskId);
+
   const novoPrazo = prompt("Digite o novo prazo (formato: AAAA-MM-DD):");
   if (novoPrazo) {
-    tarefas[index].prazo = novoPrazo;
-    tarefas[index].historico.push({
-      acao: "Prazo alterado para " + novoPrazo,
-      data: new Date().toISOString()
+    database.ref(`tasks/${user.uid}/${taskId}`).update({
+      prazo: novoPrazo,
+      historico: [...tarefa.historico, {
+        acao: "Prazo alterado para " + novoPrazo,
+        data: new Date().toISOString()
+      }]
+    }).catch(err => {
+      console.error("Erro ao reagendar tarefa:", err);
+      mostrarToast("⚠️ Erro ao reagendar tarefa!");
     });
-    localStorage.setItem("tarefas", JSON.stringify(tarefas));
-    carregarTarefas();
-    atualizarGrafico();
-    filtrarTarefas();
-    ordenarTarefas();
   }
 }
 
 // Função para editar tarefa
 function editarTarefa(btn) {
+  const user = auth.currentUser;
+  if (!user) return;
+
   const li = btn.parentElement;
-  const index = li.dataset.index;
-  const tarefa = tarefas[index];
+  const taskId = li.dataset.id;
+  const tarefa = tarefas.find(t => t.id === taskId);
 
   const novoTexto = prompt("Editar tarefa:", tarefa.texto);
   if (novoTexto === null || novoTexto.trim() === "") return;
@@ -428,21 +483,19 @@ function editarTarefa(btn) {
   const novoPrazo = prompt("Novo prazo (formato AAAA-MM-DD, deixe vazio para remover):", tarefa.prazo);
   const novaPrioridade = prompt("Nova prioridade (baixa, média, alta):", tarefa.prioridade);
 
-  tarefas[index].texto = novoTexto;
-  tarefas[index].categoria = novaCategoria || tarefa.categoria;
-  tarefas[index].prazo = novoPrazo || "";
-  tarefas[index].prioridade = novaPrioridade || tarefa.prioridade;
-
-  tarefas[index].historico.push({
-    acao: "Editada",
-    data: new Date().toISOString()
+  database.ref(`tasks/${user.uid}/${taskId}`).update({
+    texto: novoTexto,
+    categoria: novaCategoria || tarefa.categoria,
+    prazo: novoPrazo || "",
+    prioridade: novaPrioridade || tarefa.prioridade,
+    historico: [...tarefa.historico, {
+      acao: "Editada",
+      data: new Date().toISOString()
+    }]
+  }).catch(err => {
+    console.error("Erro ao editar tarefa:", err);
+    mostrarToast("⚠️ Erro ao editar tarefa!");
   });
-
-  localStorage.setItem("tarefas", JSON.stringify(tarefas));
-  carregarTarefas();
-  atualizarGrafico();
-  filtrarTarefas();
-  ordenarTarefas();
 }
 
 // Função para atualizar o contador
@@ -478,7 +531,7 @@ function solicitarPermissaoNotificacoes() {
   }
 }
 
-// Função para verificar prazos (atualizada para Notificações de Prazo)
+// Função para verificar prazos
 function verificarPrazos() {
   const agora = new Date();
   tarefas.forEach(tarefa => {
@@ -489,7 +542,6 @@ function verificarPrazos() {
         mostrarToast(`⚠️ A tarefa "${tarefa.texto}" está vencida!`);
       } else if (diffHoras <= 24) {
         mostrarToast(`⏰ A tarefa "${tarefa.texto}" vence em breve!`);
-        // Enviar notificação push
         if ('serviceWorker' in navigator && Notification.permission === 'granted') {
           navigator.serviceWorker.ready.then(registration => {
             registration.showNotification('Tarefa Perto de Vencer', {
@@ -511,12 +563,10 @@ function atualizarGrafico() {
     tarefas.filter(t => t.categoria === categoria && t.feito).length
   );
 
-  // Destruir o gráfico existente, se houver
   if (chartInstance) {
     chartInstance.destroy();
   }
 
-  // Criar um novo gráfico
   chartInstance = new Chart(ctx, {
     type: "bar",
     data: {
@@ -598,7 +648,7 @@ function exportarPDF() {
   mostrarToast("✅ Tarefas exportadas para PDF!");
 }
 
-// Função para exportar como Excel (atualizada para Exportação Filtrada)
+// Função para exportar como Excel
 function exportarExcel() {
   console.log("Iniciando exportação para Excel...");
   if (!tarefas || tarefas.length === 0) {
@@ -619,12 +669,10 @@ function exportarExcel() {
     const filtroStatus = document.getElementById("filtroStatus").value || "todas";
     let tarefasFiltradas = tarefas;
 
-    // Filtro por categoria
     if (filtroCategoria && filtroCategoria !== "todas") {
       tarefasFiltradas = tarefasFiltradas.filter(t => t.categoria === filtroCategoria);
     }
 
-    // Filtro por status (pendente, concluída, todas)
     if (filtroStatus && filtroStatus !== "todas") {
       tarefasFiltradas = tarefasFiltradas.filter(t => 
         filtroStatus === "concluídas" ? t.feito : !t.feito
@@ -676,85 +724,34 @@ function exportarExcel() {
 
 // Função para limpar tudo
 function limparTudo() {
+  const user = auth.currentUser;
+  if (!user) return;
+
   if (tarefas.length === 0) {
     mostrarToast("⚠️ Não há tarefas para limpar!");
     return;
   }
   if (confirm("Tem certeza que deseja limpar todas as tarefas?")) {
-    localStorage.removeItem("tarefas");
-    tarefas = [];
-    carregarTarefas();
-    atualizarContador();
-    atualizarGrafico();
-    mostrarToast("🗑️ Todas as tarefas foram removidas!");
+    database.ref(`tasks/${user.uid}`).remove()
+      .then(() => {
+        tarefas = [];
+        mostrarToast("🗑️ Todas as tarefas foram removidas!");
+      })
+      .catch(err => {
+        console.error("Erro ao limpar tarefas:", err);
+        mostrarToast("⚠️ Erro ao limpar tarefas!");
+      });
   }
 }
 
 // Função para filtrar tarefas
 function filtrarTarefas() {
-  const filtroCategoria = document.getElementById("filtroCategoria").value;
-  const filtroStatus = document.getElementById("filtroStatus").value || "todas";
-  const lista = document.getElementById("listaTarefas");
-  lista.innerHTML = "";
-  const agora = new Date();
-
-  let tarefasFiltradas = tarefas;
-  if (filtroCategoria !== "todas") {
-    tarefasFiltradas = tarefasFiltradas.filter(t => t.categoria === filtroCategoria);
-  }
-  if (filtroStatus !== "todas") {
-    tarefasFiltradas = tarefasFiltradas.filter(t => 
-      filtroStatus === "concluídas" ? t.feito : !t.feito
-    );
-  }
-
-  tarefasFiltradas.forEach(({ texto, categoria, prazo, feito, prioridade }, index) => {
-    const li = document.createElement("li");
-    li.className = "animada";
-    li.dataset.index = index;
-    if (feito) li.classList.add("feito");
-
-    // Verificar prazo para destacar
-    if (prazo && !feito) {
-      const prazoDate = new Date(prazo);
-      const diffDias = Math.ceil((prazoDate - agora) / (1000 * 60 * 60 * 24));
-      if (diffDias < 0) {
-        li.classList.add("tarefa-vencida");
-      } else if (diffDias <= 1) {
-        li.classList.add("tarefa-vence-em-breve");
-      }
-    }
-
-    const dataPrazo = prazo ? `<small class="prazo">⏰ ${prazo}</small>` : "";
-    const dataPrioridade = prioridade ? `<small class="prioridade">Prioridade: ${prioridade}</small>` : "";
-    li.innerHTML = `
-      <span class="${feito ? 'concluida' : ''}">${texto} <small>[${categoria}]</small> ${dataPrazo} ${dataPrioridade}</span>
-      <button class="btn-check" onclick="concluirTarefa(this)">✔️</button>
-      <button onclick="editarTarefa(this)">✏️</button>
-      <button onclick="removerTarefa(this)">🗑️</button>
-      <button onclick="reagendarTarefa(this)">📅</button>
-    `;
-    lista.appendChild(li);
-  });
+  carregarTarefas(); // Recarrega com filtros aplicados
 }
 
 // Função para ordenar tarefas
 function ordenarTarefas() {
-  const ordenacao = document.getElementById("ordenarTarefas").value;
-  if (ordenacao === "prazo") {
-    tarefas.sort((a, b) => {
-      if (!a.prazo && !b.prazo) return 0;
-      if (!a.prazo) return 1;
-      if (!b.prazo) return -1;
-      return new Date(a.prazo) - new Date(b.prazo);
-    });
-  } else if (ordenacao === "prioridade") {
-    const prioridadeOrdem = { alta: 3, média: 2, baixa: 1 };
-    tarefas.sort((a, b) => prioridadeOrdem[b.prioridade] - prioridadeOrdem[a.prioridade]);
-  }
-  localStorage.setItem("tarefas", JSON.stringify(tarefas));
-  carregarTarefas();
-  filtrarTarefas();
+  carregarTarefas(); // Recarrega com ordenação aplicada
 }
 
 // Função para atualizar o histórico
@@ -861,20 +858,104 @@ function mostrarAjudaRecorrente() {
   alert("ℹ️ Tarefas Recorrentes:\nUma tarefa recorrente é automaticamente recriada após ser concluída. Se tiver um prazo, o novo prazo será o dia seguinte ao original. Útil para hábitos ou tarefas diárias, como 'Beber água' ou 'Estudar 1 hora'.");
 }
 
+// Autenticação com Firebase
+const loginButton = document.getElementById('loginButton');
+const logoutButton = document.getElementById('logoutButton');
+const loginModal = document.getElementById('loginModal');
+const closeModal = document.getElementById('closeModal');
+const emailLoginButton = document.getElementById('emailLoginButton');
+const googleLoginButton = document.getElementById('googleLoginButton');
+const registerButton = document.getElementById('registerButton');
+const emailInput = document.getElementById('emailInput');
+const passwordInput = document.getElementById('passwordInput');
+const userInfo = document.getElementById('userInfo');
+const userName = document.getElementById('userName');
+const authError = document.getElementById('authError');
+
+loginButton.onclick = () => loginModal.style.display = 'flex';
+closeModal.onclick = () => {
+  loginModal.style.display = 'none';
+  authError.style.display = 'none';
+};
+
+emailLoginButton.onclick = () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+  auth.signInWithEmailAndPassword(email, password)
+    .then(() => {
+      loginModal.style.display = 'none';
+      authError.style.display = 'none';
+      mostrarToast("✅ Login realizado com sucesso!");
+    })
+    .catch(err => {
+      authError.textContent = err.message;
+      authError.style.display = 'block';
+    });
+};
+
+googleLoginButton.onclick = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(() => {
+      loginModal.style.display = 'none';
+      authError.style.display = 'none';
+      mostrarToast("✅ Login com Google realizado!");
+    })
+    .catch(err => {
+      authError.textContent = err.message;
+      authError.style.display = 'block';
+    });
+};
+
+registerButton.onclick = () => {
+  const email = emailInput.value;
+  const password = passwordInput.value;
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+      loginModal.style.display = 'none';
+      authError.style.display = 'none';
+      mostrarToast("✅ Conta criada com sucesso!");
+    })
+    .catch(err => {
+      authError.textContent = err.message;
+      authError.style.display = 'block';
+    });
+};
+
+logoutButton.onclick = () => {
+  auth.signOut().then(() => {
+    mostrarToast("👋 Logout realizado!");
+  });
+};
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    userInfo.style.display = 'inline';
+    userName.textContent = user.displayName || user.email;
+    loginButton.style.display = 'none';
+    logoutButton.style.display = 'block';
+    carregarTarefas();
+  } else {
+    userInfo.style.display = 'none';
+    loginButton.style.display = 'block';
+    logoutButton.style.display = 'none';
+    tarefas = [];
+    document.getElementById("listaTarefas").innerHTML = "";
+    atualizarContador();
+    atualizarGrafico();
+    atualizarHistorico();
+  }
+});
+
 // Inicialização
 document.addEventListener("DOMContentLoaded", function() {
   console.log("Inicializando aplicação...");
 
-  // Pedir permissão para notificações
   solicitarPermissaoNotificacoes();
-
-  carregarTarefas();
-  mostrarToast("🎉 Bem-vindo à sua lista de tarefas!");
   carregarTema();
   verificarPrazos();
-  setInterval(verificarPrazos, 60000); // Verifica prazos a cada 60 segundos
+  setInterval(verificarPrazos, 60000);
 
-  // Ouvintes de eventos
   document.getElementById("adicionarTarefa").addEventListener("click", adicionarTarefa);
   document.getElementById("iniciarPomodoro").addEventListener("click", iniciarPomodoro);
   document.getElementById("pausarPomodoro").addEventListener("click", pausarPomodoro);
@@ -896,7 +977,6 @@ document.addEventListener("DOMContentLoaded", function() {
     mostrarAjudaRecorrente();
   });
 
-  // Atualizar duração do Pomodoro quando entradaMinutos mudar
   document.getElementById("entradaMinutos").addEventListener("change", () => {
     if (pausado && tempoInicio === null) {
       const minutos = parseInt(document.getElementById("entradaMinutos").value) || 25;
@@ -905,62 +985,46 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   });
 
-  // Atualizar tempo ao voltar para a aba
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && !pausado && tempoInicio !== null) {
       atualizarTempo();
     }
   });
 
-// Atualizar tempo ao voltar para a aba
-  document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && !pausado && tempoInicio !== null) {
-      atualizarTempo();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && document.activeElement === document.getElementById("novaTarefa")) {
+      adicionarTarefa();
+    }
+    if (e.key === " " && !e.target.matches("input, select")) {
+      e.preventDefault();
+      if (pausado) {
+        iniciarPomodoro();
+      } else {
+        pausarPomodoro();
+      }
+    }
+    if (e.ctrlKey && e.shiftKey && e.key === "L") {
+      limparTudo();
     }
   });
 
-document.addEventListener("keydown", (e) => {
-  // Adicionar tarefa ao pressionar Enter
-  if (e.key === "Enter" && document.activeElement === document.getElementById("novaTarefa")) {
-    adicionarTarefa();
-  }
-  // Iniciar/pausar Pomodoro com Espaço
-  if (e.key === " " && !e.target.matches("input, select")) {
-    e.preventDefault();
-    if (pausado) {
-      iniciarPomodoro();
-    } else {
-      pausarPomodoro();
-    }
-  }
-  // Limpar tudo com Ctrl + Shift + L
-  if (e.ctrlKey && e.shiftKey && e.key === "L") {
-    limparTudo();
-  }
-});
+  document.getElementById("corPrimaria").addEventListener("input", (e) => {
+    document.documentElement.style.setProperty("--primary", e.target.value);
+    localStorage.setItem("corPrimaria", e.target.value);
+  });
 
-document.getElementById("corPrimaria").addEventListener("input", (e) => {
-  document.documentElement.style.setProperty("--primary", e.target.value);
-  localStorage.setItem("corPrimaria", e.target.value);
-});
+  document.getElementById("corFundo").addEventListener("input", (e) => {
+    document.documentElement.style.setProperty("--background", e.target.value);
+    localStorage.setItem("corFundo", e.target.value);
+  });
 
-document.getElementById("corFundo").addEventListener("input", (e) => {
-  document.documentElement.style.setProperty("--background", e.target.value);
-  localStorage.setItem("corFundo", e.target.value);
-});
-
-// Carregar cores salvas ao iniciar
-document.addEventListener("DOMContentLoaded", () => {
   const corPrimariaSalva = localStorage.getItem("corPrimaria") || "#ff6347";
   const corFundoSalva = localStorage.getItem("corFundo") || "#1a1a1a";
   document.documentElement.style.setProperty("--primary", corPrimariaSalva);
   document.documentElement.style.setProperty("--background", corFundoSalva);
   document.getElementById("corPrimaria").value = corPrimariaSalva;
   document.getElementById("corFundo").value = corFundoSalva;
-  // ... resto do código
-});
 
-  // Verificar áudios
   console.log("somAdicionar carregado:", document.getElementById("somAdicionar").readyState === 4 ? "Sim" : "Não");
   console.log("somRemover carregado:", document.getElementById("somRemover").readyState === 4 ? "Sim" : "Não");
 

@@ -37,11 +37,10 @@
     }
   }, 3000);
   </script>  
-  <!-- Firebase (comentado para evitar erros) -->
-  <!--
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
-  -->
   <!-- FullCalendar -->
   <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
@@ -50,25 +49,45 @@
   <div class="container">
     <header>
       <h1>📝 Minha Lista de Tarefas</h1>
+      <!-- Seção de autenticação -->
+      <div id="authSection" class="auth-section">
+        <span id="userInfo" style="display: none;">Bem-vindo, <span id="userName"></span></span>
+        <button id="loginButton" style="display: block;">Login</button>
+        <button id="logoutButton" style="display: none;">Sair</button>
+      </div>
     </header>
+
+    <!-- Modal de Login -->
+    <div id="loginModal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <span id="closeModal" class="close">&times;</span>
+        <h2>Login</h2>
+        <input type="email" id="emailInput" placeholder="E-mail" aria-label="E-mail para login" />
+        <input type="password" id="passwordInput" placeholder="Senha" aria-label="Senha para login" />
+        <button id="emailLoginButton">Login com E-mail</button>
+        <button id="googleLoginButton">Login com Google</button>
+        <button id="registerButton">Criar Conta</button>
+        <p id="authError" style="color: red; display: none;"></p>
+      </div>
+    </div>
 
     <section class="contador" aria-label="Contador de tarefas">
       <span id="total">Total: 0</span>
       <span id="pendentes">Pendentes: 0</span>
     </section>
 
-   <section class="pomodoro" aria-label="Temporizador Pomodoro">
-  <h2>🍅 Temporizador Pomodoro</h2>
-  <div class="entrada-tempo">
-    <label for="entradaMinutos">Tempo (min):</label>
-    <input type="number" id="entradaMinutos" min="1" max="90" value="25" />
-  </div>
-  <div id="tempo" role="timer" aria-live="polite">25:00</div>
-  <button id="iniciarPomodoro" aria-label="Iniciar temporizador Pomodoro">Iniciar</button>
-  <button id="pausarPomodoro" aria-label="Pausar temporizador Pomodoro">Pausar</button>
-  <button id="resetarPomodoro" aria-label="Resetar temporizador Pomodoro">Resetar</button>
-  <button id="pararAlarme" style="display: none;" aria-label="Parar alarme do Pomodoro">Parar Alarme</button>
-</section>
+    <section class="pomodoro" aria-label="Temporizador Pomodoro">
+      <h2>🍅 Temporizador Pomodoro</h2>
+      <div class="entrada-tempo">
+        <label for="entradaMinutos">Tempo (min):</label>
+        <input type="number" id="entradaMinutos" min="1" max="90" value="25" />
+      </div>
+      <div id="tempo" role="timer" aria-live="polite">25:00</div>
+      <button id="iniciarPomodoro" aria-label="Iniciar temporizador Pomodoro">Iniciar</button>
+      <button id="pausarPomodoro" aria-label="Pausar temporizador Pomodoro">Pausar</button>
+      <button id="resetarPomodoro" aria-label="Resetar temporizador Pomodoro">Resetar</button>
+      <button id="pararAlarme" style="display: none;" aria-label="Parar alarme do Pomodoro">Parar Alarme</button>
+    </section>
     
     <section class="input-tarefa" aria-label="Adicionar nova tarefa">
       <input type="text" id="novaTarefa" placeholder="Digite uma nova tarefa..." aria-label="Nova tarefa" />
@@ -117,7 +136,6 @@
         <option value="Estudos">Estudos</option>
         <option value="Outros">Outros</option>
       </select>
-      <!-- Adicionado: Filtro de status -->
       <label for="filtroStatus">Filtrar por status:</label>
       <select id="filtroStatus">
         <option value="todas">Todas</option>
@@ -128,7 +146,6 @@
       <select id="ordenarTarefas">
         <option value="padrao">Padrão</option>
         <option value="prazo">Prazo (Mais Próximo)</option>
-        <!-- Adicionado: Ordenar por prioridade -->
         <option value="prioridade">Prioridade</option>
       </select>
     </section>
@@ -158,20 +175,20 @@
 
     <canvas id="graficoTarefas" aria-label="Gráfico de tarefas concluídas por categoria"></canvas>
 
-    <!-- Adicionado: Seção de histórico -->
+    <!-- Seção de histórico -->
     <section class="historico">
       <h2>Histórico de Alterações</h2>
       <ul id="listaHistorico"></ul>
     </section>
   </div>
 
-<section class="personalizar-tema" aria-label="Personalizar tema">
-  <h2>🎨 Personalizar Tema</h2>
-  <label for="corPrimaria">Cor Primária:</label>
-  <input type="color" id="corPrimaria" value="#ff6347" />
-  <label for="corFundo">Cor de Fundo:</label>
-  <input type="color" id="corFundo" value="#1a1a1a" />
-</section>
+  <section class="personalizar-tema" aria-label="Personalizar tema">
+    <h2>🎨 Personalizar Tema</h2>
+    <label for="corPrimaria">Cor Primária:</label>
+    <input type="color" id="corPrimaria" value="#ff6347" />
+    <label for="corFundo">Cor de Fundo:</label>
+    <input type="color" id="corFundo" value="#1a1a1a" />
+  </section>
 
   <!-- Toast -->
   <div class="toast" id="toast">Tarefa adicionada!</div>
@@ -188,6 +205,21 @@
 
   <!-- Script principal -->
   <script src="script.js"></script>
+
+  <!-- Inicialização do Firebase -->
+  <script>
+    const firebaseConfig = {
+      // Substitua pelo seu objeto de configuração do Firebase
+      apiKey: "AIzaSyAPzPmw2sAYE02ZXx59Q62ImVnfk5r9Qr0",
+      authDomain: "lista-de-tarefas-c6324.firebaseapp.com",
+      databaseURL: "https://console.firebase.google.com/u/0/project/lista-de-tarefas-c6324/overview?hl=pt-br&fb_gclid=Cj0KCQjwzrzABhD8ARIsANlSWNMRDMk1E8DZvR99pb8vIBQU0rAAiS8wO74_0EFgFIfgk9pdf5f-rREaAil4EALw_wcB",
+      projectId: "lista-de-tarefas-c6324",
+      storageBucket: "lista-de-tarefas-c6324.firebasestorage.app",
+      messagingSenderId: "686192073776",
+      appId: "1:686192073776:web:d3c25084a9706df59da1f5"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 
   <!-- Service Worker -->
   <script>
