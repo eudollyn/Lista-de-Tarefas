@@ -1,3 +1,18 @@
+// Importar os módulos do Firebase
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+import { getAuth } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
+import { getDatabase } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+
+// Inicializar o Firebase com o config global
+const app = initializeApp(window.firebaseConfig);
+const auth = getAuth(app);
+const database = getDatabase(app);
+
+console.log("Firebase inicializado com sucesso!");
+
+// Expor os objetos para uso global (se necessário)
+window.firebase = { auth, database };
+
 // Variáveis globais
 let tarefas = [];
 let modoVisualizacao = "lista";
@@ -8,10 +23,6 @@ let tempoInicio = null;
 let duracaoTotal = 1500; // 25 minutos em segundos
 let pausado = true;
 let chartInstance = null;
-
-// Obter os objetos do Firebase da janela global
-const auth = window.firebase.auth;
-const database = window.firebase.database;
 
 // Função para tocar som com fallback
 function tocarSom(somId) {
@@ -29,7 +40,7 @@ function tocarSom(somId) {
   }
 }
 
-// ... (o restante do script.js permanece o mesmo, a partir de carregarTarefas)
+// Função para carregar tarefas
 function carregarTarefas() {
   const user = auth.currentUser;
   if (!user) {
@@ -107,4 +118,4 @@ function carregarTarefas() {
   });
 }
 
-// ... (o restante do script.js permanece o mesmo até o final)
+// ... (o restante do script.js permanece o mesmo até o final, incluindo as funções como mostrarToast, concluirTarefa, etc.)

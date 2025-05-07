@@ -176,16 +176,9 @@
   <audio id="somRemover" src="assets/remove.wav" preload="auto"></audio>
   <audio id="pomodoroAlarm" src="pomodoroalarm.mp3" preload="auto"></audio>
 
-  <!-- Script principal como módulo -->
-  <script type="module" src="script.js"></script>
-
-  <!-- Inicialização do Firebase como módulo -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-    import { getAuth } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
-    import { getDatabase } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
-
-    const firebaseConfig = {
+  <!-- Configuração do firebaseConfig como variável global -->
+  <script>
+    window.firebaseConfig = {
       apiKey: "AIzaSyAPzPmw2sAYE02ZXx59Q62ImVnfk5r9Qr0",
       authDomain: "lista-de-tarefas-c6324.firebaseapp.com",
       databaseURL: "https://lista-de-tarefas-c6324-default-rtdb.firebaseio.com",
@@ -194,14 +187,10 @@
       messagingSenderId: "686192073776",
       appId: "1:686192073776:web:d3c25084a9706df59da1f5"
     };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const database = getDatabase(app);
-
-    console.log("Firebase inicializado com sucesso!");
-    window.firebase = { auth, database }; // Expor para uso no script.js
   </script>
+
+  <!-- Script principal como módulo -->
+  <script type="module" src="script.js"></script>
 
   <!-- Script com fallback para SheetJS -->
   <script>
