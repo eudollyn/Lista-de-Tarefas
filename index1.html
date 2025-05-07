@@ -16,26 +16,26 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <!-- Script com fallback para SheetJS -->
   <script>
-  function loadScript(url, callback) {
-    const script = document.createElement("script");
-    script.src = url;
-    script.onload = callback;
-    script.onerror = () => console.error(`Falha ao carregar o script: ${url}`);
-    document.head.appendChild(script);
-  }
-
-  loadScript("https://cdn.sheetjs.com/xlsx-latest/dist/xlsx.full.min.js", () => {
-    console.log("SheetJS carregado com sucesso!");
-  });
-
-  setTimeout(() => {
-    if (typeof XLSX === "undefined") {
-      console.warn("SheetJS não carregado pelo CDN principal. Tentando fallback...");
-      loadScript("https://unpkg.com/xlsx/dist/xlsx.full.min.js", () => {
-        console.log("SheetJS carregado pelo fallback!");
-      });
+    function loadScript(url, callback) {
+      const script = document.createElement("script");
+      script.src = url;
+      script.onload = callback;
+      script.onerror = () => console.error(`Falha ao carregar o script: ${url}`);
+      document.head.appendChild(script);
     }
-  }, 3000);
+
+    loadScript("https://cdn.sheetjs.com/xlsx-latest/dist/xlsx.full.min.js", () => {
+      console.log("SheetJS carregado com sucesso!");
+    });
+
+    setTimeout(() => {
+      if (typeof XLSX === "undefined") {
+        console.warn("SheetJS não carregado pelo CDN principal. Tentando fallback...");
+        loadScript("https://unpkg.com/xlsx/dist/xlsx.full.min.js", () => {
+          console.log("SheetJS carregado pelo fallback!");
+        });
+      }
+    }, 3000);
   </script>  
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
@@ -60,7 +60,7 @@
     <!-- Modal de Login -->
     <div id="loginModal" class="modal" style="display: none;">
       <div class="modal-content">
-        <span id="closeModal" class="close">&times;</span>
+        <span id="closeModal" class="close">×</span>
         <h2>Login</h2>
         <input type="email" id="emailInput" placeholder="E-mail" aria-label="E-mail para login" />
         <input type="password" id="passwordInput" placeholder="Senha" aria-label="Senha para login" />
@@ -209,16 +209,16 @@
   <!-- Inicialização do Firebase -->
   <script>
     const firebaseConfig = {
-      // Substitua pelo seu objeto de configuração do Firebase
       apiKey: "AIzaSyAPzPmw2sAYE02ZXx59Q62ImVnfk5r9Qr0",
       authDomain: "lista-de-tarefas-c6324.firebaseapp.com",
-      databaseURL: "https://console.firebase.google.com/u/0/project/lista-de-tarefas-c6324/overview?hl=pt-br&fb_gclid=Cj0KCQjwzrzABhD8ARIsANlSWNMRDMk1E8DZvR99pb8vIBQU0rAAiS8wO74_0EFgFIfgk9pdf5f-rREaAil4EALw_wcB",
+      databaseURL: "https://lista-de-tarefas-c6324-default-rtdb.firebaseio.com",
       projectId: "lista-de-tarefas-c6324",
       storageBucket: "lista-de-tarefas-c6324.firebasestorage.app",
       messagingSenderId: "686192073776",
       appId: "1:686192073776:web:d3c25084a9706df59da1f5"
     };
     firebase.initializeApp(firebaseConfig);
+    console.log("Firebase inicializado com sucesso!");
   </script>
 
   <!-- Service Worker -->
